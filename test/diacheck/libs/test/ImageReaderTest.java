@@ -24,6 +24,7 @@ import org.robolectric.RobolectricTestRunner;
 @RunWith(RobolectricTestRunner.class)
 public class ImageReaderTest
 {
+	public static String IMAGE_PATH = "test/images/";
 
 	public void setUp() throws Exception
 	{
@@ -33,7 +34,8 @@ public class ImageReaderTest
 	public void testColorAnalysisOfFocuedImageWithFlashOnTealAreaAndSyntheticGreyArea()
 			throws IOException
 	{		
-		File input = new File("images/flash_sharp1_with_fake_grey_area.png");
+		final File input = new File(IMAGE_PATH + "flash_sharp1_with_fake_grey_area.png");
+		assertTrue(input.canRead());
 		ImageReader image = new ImageReader(input);
 		
 		final Point upperLeftCorner = new Point(1093, 1091);
@@ -74,20 +76,22 @@ public class ImageReaderTest
 	public void testFindEdges() throws IOException
 	{
 		final Point edgePixel = new Point(423, 1450);
-		ImageReader image = new ImageReader(new File("images/flash_sharp1_with_fake_grey_area.png"));
+		
+		final File input = new File(IMAGE_PATH + "flash_sharp1_with_fake_grey_area.png");
+		assertTrue(input.canRead());
+		ImageReader image = new ImageReader(input);
+		
 		Set<Point> edges = image.findEdges();
 		assertTrue(edges.contains(edgePixel));
 		
-		makeEdgesBlue(new File("images/flash_sharp1_with_fake_grey_area.png"), edges);
+		makeEdgesBlue(input, edges);
 	}
 	
 	private void makeEdgesBlue(File image, Set<Point> edges) throws IOException
 	{
 		Bitmap imageData = BitmapFactory.decodeFile(image.getAbsolutePath());
 		for(Point edge:edges)
-		{
 			imageData.setPixel(edge.x, edge.y, 0x0000ff);
-		}
 		File blueImage = new File(image.getAbsoluteFile() + "blue.png");
         imageData.compress(Bitmap.CompressFormat.PNG, 100, new FileOutputStream(blueImage));
 	}
