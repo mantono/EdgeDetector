@@ -43,7 +43,11 @@ public class ImageReader
 	{
 		final int size = calculateSampleSize(start, end);
 		int[] samples = new int[size];
-        Bitmap imageData = BitmapFactory.decodeFile(image.getAbsolutePath());
+		BitmapFactory.Options imageOptions = new BitmapFactory.Options();
+		imageOptions.outWidth = 200;
+		imageOptions.outHeight = 200;
+        Bitmap imageData = BitmapFactory.decodeFile(image.getAbsolutePath(), imageOptions);
+        assert imageOptions.outWidth == 200;
 
 		int xStart, xStop, yStart, yStop;
 		if(start.x < end.x)
@@ -72,9 +76,16 @@ public class ImageReader
 		{
 			for(int x = xStart; x < xStop; x += 5)
 			{
-				int pixel = imageData.getPixel(x, y);
-				assert sizeCount < size : "Going out of bounds with " + x + " and " + y;
-				samples[sizeCount++] = pixel;
+				try
+				{
+					int pixel = imageData.getPixel(x, y);
+					assert sizeCount < size : "Going out of bounds with " + x + " and " + y;
+					samples[sizeCount++] = pixel;
+				}
+				catch(IllegalArgumentException exception)
+				{
+					throw new IllegalArgumentException("x: " + x + " (size " + imageData.getWidth() + ")\ny: " + y + " (size " + imageData.getHeight() + ")");
+				}
 			}
 		}
 		return samples;
