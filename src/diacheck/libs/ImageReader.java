@@ -1,18 +1,22 @@
 package diacheck.libs;
 
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.Point;
-import android.graphics.Bitmap;
+import java.awt.Color;
+import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.imageio.ImageIO;
+
 public class ImageReader
 {
+	public final static int REDMASK = 0xff0000;
+	public final static int GREENMASK = 0x00ff00;
+	public final static int BLUEMASK = 0x0000ff;
 	private final File image;
-	private final int whiteBalance;
+	private final Color whiteBalance;
 
 	public ImageReader(File file) throws IOException
 	{
@@ -20,34 +24,30 @@ public class ImageReader
 		whiteBalance = analyzeWhiteBalance();
 	}
 
-	private int analyzeWhiteBalance() throws IOException
+	private Color analyzeWhiteBalance() throws IOException
 	{
-		int[] whiteBalanceSamples = collectWhiteBalanceData();
+		Color[] whiteBalanceSamples = collectWhiteBalanceData();
 		return getAverageColorForData(whiteBalanceSamples);
 	}
 
-	private int[] collectWhiteBalanceData() throws IOException
+	private Color[] collectWhiteBalanceData() throws IOException
 	{
 		return pickColorSamples(new Point(429, 1428), new Point(443, 1442));
 	}
 
-	public int getAverageColorForCoordinates(Point start, Point end)
+	public Color getAverageColorForCoordinates(Point start, Point end)
 			throws IOException
 	{
-		int[] colorSamples = pickColorSamples(start, end);
-		int averageColor = getAverageColorForData(colorSamples);
+		Color[] colorSamples = pickColorSamples(start, end);
+		Color averageColor = getAverageColorForData(colorSamples);
 		return whiteBalanceCompensation(averageColor);
 	}
 
-	private int[] pickColorSamples(Point start, Point end) throws IOException
+	private Color[] pickColorSamples(Point start, Point end) throws IOException
 	{
 		final int size = calculateSampleSize(start, end);
-		int[] samples = new int[size];
-		BitmapFactory.Options imageOptions = new BitmapFactory.Options();
-		imageOptions.outWidth = 200;
-		imageOptions.outHeight = 200;
-        Bitmap imageData = BitmapFactory.decodeFile(image.getAbsolutePath(), imageOptions);
-        assert imageOptions.outWidth == 200;
+		Color[] samples = new Color[size];
+		BufferedImage imageData = ImageIO.read(image);
 
 		int xStart, xStop, yStart, yStop;
 		if(start.x < end.x)
@@ -76,19 +76,17 @@ public class ImageReader
 		{
 			for(int x = xStart; x < xStop; x += 5)
 			{
-				try
-				{
-					int pixel = imageData.getPixel(x, y);
-					assert sizeCount < size : "Going out of bounds with " + x + " and " + y;
-					samples[sizeCount++] = pixel;
-				}
-				catch(IllegalArgumentException exception)
-				{
-					throw new IllegalArgumentException("x: " + x + " (size " + imageData.getWidth() + ")\ny: " + y + " (size " + imageData.getHeight() + ")");
-				}
+				int pixel = imageData.getRGB(x, y);
+				assert sizeCount < size : "Going out of bounds with " + x + " and " + y;
+				samples[sizeCount++] = getColor(pixel);
 			}
 		}
 		return samples;
+	}
+
+	private Color getColor(int pixel)
+	{
+		return new Color(getRed(pixel), getGreen(pixel), getBlue(pixel));
 	}
 
 	public static int calculateSampleSize(Point start, Point end)
@@ -98,45 +96,59 @@ public class ImageReader
 		return x * y;
 	}
 
-	private int whiteBalanceCompensation(int averageColor)
+	private Color whiteBalanceCompensation(Color averageColor)
 	{
-		final int redGreenDiff = Color.green(whiteBalance) - Color.red(whiteBalance);
-		final int blueGreenDiff = Color.green(whiteBalance) - Color.blue(whiteBalance);
-
-		return Color.rgb(Color.red(averageColor) + redGreenDiff, Color.green(averageColor), Color.blue(averageColor) + blueGreenDiff);
+		final int redGreenDiff = whiteBalance.getGreen() - whiteBalance.getRed();
+		final int blueGreenDiff = whiteBalance.getGreen() - whiteBalance.getBlue();
+		return new Color(averageColor.getRed() + redGreenDiff, averageColor.getGreen(), averageColor.getBlue() + blueGreenDiff);
 	}
 
-	public int getAverageColorForData(int[] colorSamples)
+	public Color getAverageColorForData(Color[] colorSamples)
 	{
 		int red, green, blue;
 		red = green = blue = 0;
-		for(Integer sample : colorSamples)
+		for(Color sample : colorSamples)
 		{
-			red += Color.red(sample);
-			green += Color.green(sample);
-			blue += Color.blue(sample);
+			red += sample.getRed();
+			green += sample.getGreen();
+			blue += sample.getBlue();
 		}
 		red /= colorSamples.length;
 		green /= colorSamples.length;
 		blue /= colorSamples.length;
 
-		return Color.rgb(red, green, blue);
+		return new Color(red, green, blue);
+	}
+
+	private static int getRed(final int pixel)
+	{
+		return (pixel & REDMASK) >> 16;
+	}
+
+	private static int getGreen(final int pixel)
+	{
+		return (pixel & GREENMASK) >> 8;
+	}
+
+	private static int getBlue(final int pixel)
+	{
+		return pixel & BLUEMASK;
 	}
 
 	public Set<Point> findEdges() throws IOException
 	{
 		final int distance = 6;
 		Set<Point> edges = new HashSet<Point>();
-        Bitmap imageData = BitmapFactory.decodeFile(image.getAbsolutePath());
+		BufferedImage imageData = ImageIO.read(image);
 		for(int y = distance; y < imageData.getHeight(); y += 2)
 		{
 			for(int x = distance; x < imageData.getWidth(); x += 2)
 			{
-				int currentPixel = imageData.getPixel(x, y);
-				int previousPixel = imageData.getPixel(x-distance,  y);
+				int currentPixel = imageData.getRGB(x, y);
+				int previousPixel = imageData.getRGB(x-distance,  y);
 				if(isEdge(currentPixel, previousPixel))
 					edges.add(new Point(x-distance/2, y));
-				previousPixel = imageData.getPixel(x, y-distance);
+				previousPixel = imageData.getRGB(x, y-distance);
 				if(isEdge(currentPixel, previousPixel))
 					edges.add(new Point(x, y-distance/2));
 			}
@@ -163,15 +175,15 @@ public class ImageReader
 	public static boolean isEdge(int pixel1, int pixel2)
 	{
 		final int threshold = 45;
-		final int diffRed = Math.abs(Color.red(pixel1) - Color.red(pixel2));
+		final int diffRed = Math.abs(getRed(pixel1) - getRed(pixel2));
 		if(diffRed > threshold)
 			return true;
 		
-		final int diffGreen = Math.abs(Color.green(pixel1) - Color.green(pixel2));
+		final int diffGreen = Math.abs(getGreen(pixel1) - getGreen(pixel2)); 
 		if(diffGreen > threshold)
 			return true;
 		
-		final int diffBlue = Math.abs(Color.blue(pixel1) - Color.blue(pixel2));
+		final int diffBlue = Math.abs(getBlue(pixel1) - getBlue(pixel2)); 
 		if(diffBlue > threshold)
 			return true;
 		

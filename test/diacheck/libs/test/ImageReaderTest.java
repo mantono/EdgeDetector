@@ -1,31 +1,26 @@
 package diacheck.libs.test;
 
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.Point;
-import android.graphics.Bitmap;
+import static org.junit.Assert.*;
 
+import java.awt.Color;
+import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Set;
 
-import diacheck.libs.ImageReader;
+import javax.imageio.ImageIO;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertThat;
-
-import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
 
-@RunWith(RobolectricTestRunner.class)
+import diacheck.libs.ImageReader;
+
 public class ImageReaderTest
 {
 	public static String IMAGE_PATH = "test/images/";
 
+	@Before
 	public void setUp() throws Exception
 	{
 	}
@@ -33,26 +28,48 @@ public class ImageReaderTest
 	@Test
 	public void testColorAnalysisOfFocuedImageWithFlashOnTealAreaAndSyntheticGreyArea()
 			throws IOException
-	{		
-		final File input = new File(IMAGE_PATH + "flash_sharp1_with_fake_grey_area.png");
-		assertTrue(input.canRead());
-		ImageReader image = new ImageReader(input);
-		
+	{
+		ImageReader image = new ImageReader(new File(IMAGE_PATH + "flash_sharp1_with_fake_grey_area.png"));
 		final Point upperLeftCorner = new Point(1093, 1091);
 		final Point lowerRightCorner = new Point(1212, 1212);
-
-		int averageColor = image.getAverageColorForCoordinates(upperLeftCorner, lowerRightCorner);
+		Color averageColor = image.getAverageColorForCoordinates(upperLeftCorner, lowerRightCorner);
 
 		/*
 		 * Det förväntade resultatet är beräknat efter manuell uträkning på 14
 		 * olika punkter i mittersta stickan för värdet på ljusblått fält
 		 */
-		final int expectedResult = Color.rgb(89, 141, 143);
+		final Color expectedResult = new Color(89, 141, 143);
 
-		final int redDiff = Math.abs(Color.red(expectedResult) - Color.red(averageColor));
-		final int greenDiff = Math.abs(Color.green(expectedResult) - Color.green(averageColor));
-		final int blueDiff = Math.abs(Color.blue(expectedResult) - Color.blue(averageColor));
+		final int redDiff = Math.abs(expectedResult.getRed() - averageColor.getRed());
+		final int greenDiff = Math.abs(expectedResult.getGreen() - averageColor.getGreen());
+		final int blueDiff = Math.abs(expectedResult.getBlue() - averageColor.getBlue());
 
+		assertTrue(redDiff < 2);
+		assertTrue(greenDiff < 2);
+		assertTrue(blueDiff < 2);
+	}
+	
+	@Test
+	public void testColorAnalysisOfFocuedImageWithFlashOnTopOrangeAreaAndRealGreyCard()
+			throws IOException
+	{
+		ImageReader image = new ImageReader(new File(IMAGE_PATH + "flash_sharp_with_grey_card.jpg"));
+		//TODO har inte anpassat koordinater ännu, men det är inte relevant för ens vi har en bra algoritm
+		// för att hitta fält för "gråkort"
+		final Point upperLeftCorner = new Point(1093, 1091);
+		final Point lowerRightCorner = new Point(1212, 1212);
+		Color averageColor = image.getAverageColorForCoordinates(upperLeftCorner, lowerRightCorner);
+		
+		/*
+		 * Det förväntade resultatet är beräknat efter manuell uträkning på 14
+		 * olika punkter i mittersta stickan för värdet på ljusblått fält
+		 */
+		final Color expectedResult = new Color(89, 141, 143);
+		
+		final int redDiff = Math.abs(expectedResult.getRed() - averageColor.getRed());
+		final int greenDiff = Math.abs(expectedResult.getGreen() - averageColor.getGreen());
+		final int blueDiff = Math.abs(expectedResult.getBlue() - averageColor.getBlue());
+		
 		assertTrue(redDiff < 2);
 		assertTrue(greenDiff < 2);
 		assertTrue(blueDiff < 2);
@@ -71,29 +88,27 @@ public class ImageReaderTest
 		size = ImageReader.calculateSampleSize(start, end);
 		assertEquals(25, size);
 	}
-
+	
 	@Test
 	public void testFindEdges() throws IOException
 	{
 		final Point edgePixel = new Point(423, 1450);
-		
-		final File input = new File(IMAGE_PATH + "flash_sharp1_with_fake_grey_area.png");
-		assertTrue(input.canRead());
-		ImageReader image = new ImageReader(input);
-		
+		ImageReader image = new ImageReader(new File(IMAGE_PATH + "flash_sharp1_with_fake_grey_area.png"));
 		Set<Point> edges = image.findEdges();
 		assertTrue(edges.contains(edgePixel));
 		
-		makeEdgesBlue(input, edges);
+		makeEdgesBlue(new File(IMAGE_PATH + "flash_sharp1_with_fake_grey_area.png"), edges);
 	}
 	
 	private void makeEdgesBlue(File image, Set<Point> edges) throws IOException
 	{
-		Bitmap imageData = BitmapFactory.decodeFile(image.getAbsolutePath());
+		BufferedImage imageData = ImageIO.read(image);
 		for(Point edge:edges)
-			imageData.setPixel(edge.x, edge.y, 0x0000ff);
+		{
+			imageData.setRGB(edge.x, edge.y, ImageReader.BLUEMASK);
+		}
 		File blueImage = new File(image.getAbsoluteFile() + "blue.png");
-        imageData.compress(Bitmap.CompressFormat.PNG, 100, new FileOutputStream(blueImage));
+		ImageIO.write(imageData, "png", blueImage);
 	}
 
 	@Test
@@ -114,6 +129,6 @@ public class ImageReaderTest
 		assertFalse(ImageReader.isEdge(blue1, blue2)); // diff == 45
 		assertTrue(ImageReader.isEdge(blue1, blue3)); // diff == 46
 		assertTrue(ImageReader.isEdge(blue1, blueGrey));
-	}
+	}	
 
 }
