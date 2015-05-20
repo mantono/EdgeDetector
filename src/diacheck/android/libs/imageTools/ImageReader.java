@@ -42,6 +42,16 @@ public class ImageReader
 		Color averageColor = getAverageColorForData(colorSamples);
 		return whiteBalanceCompensation(averageColor);
 	}
+	
+	public float getAligmentOfset()
+	{
+		return 0;
+	}
+	
+	public float getNoisePercentage()
+	{
+		return 0;
+	}
 
 	private Color[] pickColorSamples(Point start, Point end) throws IOException
 	{

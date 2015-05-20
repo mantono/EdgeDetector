@@ -6,11 +6,14 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
-import java.util.TreeSet;
 
 import javax.imageio.ImageIO;
+
+/**
+ * 
+ * @author Anton &Ouml;sterberg
+ */
 
 public class ImageReader
 {
