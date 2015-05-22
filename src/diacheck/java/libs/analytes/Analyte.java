@@ -4,4 +4,5 @@ public interface Analyte
 {
 	public double result();
 	public byte zone();
+	public Statement statement();
 }

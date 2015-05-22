@@ -17,4 +17,11 @@ public class Ketones implements Analyte
 		return 0;
 	}
 
+	@Override
+	public Statement statement()
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

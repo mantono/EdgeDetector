@@ -4,7 +4,9 @@ import static org.junit.Assert.*;
 
 import java.awt.Color;
 import java.awt.Point;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.Before;
@@ -21,14 +23,14 @@ public class FieldTest
 	@Before
 	public void setUp() throws Exception
 	{
-		Set<Color> pixels = new HashSet<Color>();
+		List<Color> pixels = new ArrayList<Color>();
 		final Color first = new Color(12, 0, 0);
 		final Color second = new Color(0, 12, 0);
 		final Color third = new Color(0, 0, 12);
 		pixels.add(first);
 		pixels.add(second);
 		pixels.add(third);
-		this.field = new Field(START, END);
+		this.field = new Field(START, END, pixels);
 	}
 
 	@Test
@@ -46,7 +48,13 @@ public class FieldTest
 	@Test
 	public void testGetSize()
 	{
-		fail("Not yet implemented");
+		assertEquals(64, field.getSize());
+	}
+	
+	@Test
+	public void testGetAmountOfPixels()
+	{
+		assertEquals(3, field.getAmountOfPixels());
 	}
 
 	@Test

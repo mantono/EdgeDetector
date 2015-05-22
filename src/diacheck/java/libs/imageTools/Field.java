@@ -3,16 +3,18 @@ package diacheck.java.libs.imageTools;
 
 import java.awt.Color;
 import java.awt.Point;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class Field
 {
 	private final Point startPosition;
 	private final Point endPosition;
-	private final Set<Color> pixels;
+	private final List<Color> pixels;
 	
-	public Field(final Point start, final Point end, final Set<Color> pixels)
+	public Field(final Point start, final Point end, final List<Color> pixels)
 	{
 		this.startPosition = start;
 		this.endPosition = end;
@@ -23,7 +25,9 @@ public class Field
 
 	public Field(final Point start, final Point end)
 	{
-		this(start, end, new HashSet<Color>());
+		this.startPosition = start;
+		this.endPosition = end;
+		this.pixels = new ArrayList<Color>(getSize());
 	}
 	
 	public int getSize()
@@ -40,6 +44,8 @@ public class Field
 	
 	public Color getAverageColor()
 	{
-		return ImageReader.getAverageColorForData(pixels);
+		Color[] pixelArray = new Color[pixels.size()];
+		pixelArray = pixels.toArray(pixelArray);
+		return ImageReader.getAverageColorForData(pixelArray);
 	}
 }
