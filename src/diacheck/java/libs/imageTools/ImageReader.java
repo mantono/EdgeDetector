@@ -108,7 +108,7 @@ public class ImageReader
 		return new Color(averageColor.getRed() + redGreenDiff, averageColor.getGreen(), averageColor.getBlue() + blueGreenDiff);
 	}
 
-	public Color getAverageColorForData(Color[] colorSamples)
+	public static Color getAverageColorForData(Color[] colorSamples)
 	{
 		int red, green, blue;
 		red = green = blue = 0;
