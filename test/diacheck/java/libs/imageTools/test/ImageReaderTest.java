@@ -14,6 +14,7 @@ import javax.imageio.ImageIO;
 import org.junit.Before;
 import org.junit.Test;
 
+import diacheck.java.libs.imageTools.Field;
 import diacheck.java.libs.imageTools.ImageReader;
 
 public class ImageReaderTest
@@ -109,6 +110,15 @@ public class ImageReaderTest
 		assertFalse(ImageReader.isEdge(blue1, blue2)); // diff == 45
 		assertTrue(ImageReader.isEdge(blue1, blue3)); // diff == 46
 		assertTrue(ImageReader.isEdge(blue1, blueGrey));
+	}
+	
+	@Test
+	public void testFindControlFields() throws IOException
+	{
+		final File input = new File(IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
+		assertTrue("Can't read file " + input, input.canRead());
+		ImageReader image = new ImageReader(input);	
+		Field[] fields = image.findControlFields();
 	}
 
 }

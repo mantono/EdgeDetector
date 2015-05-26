@@ -1,5 +1,6 @@
 package diacheck.java.libs.imageTools;
 
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 
 /**
@@ -16,7 +17,7 @@ public class ImageTransformer
 		this.imageData = image;
 	}
 	
-	public void rotate(float degress)
+	public void rotate(final Point center, float degress)
 	{
 		
 	}

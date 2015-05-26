@@ -5,7 +5,9 @@ import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -20,13 +22,18 @@ public class ImageReader
 	public final static int REDMASK = 0xff0000;
 	public final static int GREENMASK = 0x00ff00;
 	public final static int BLUEMASK = 0x0000ff;
+	public final static Color CONTROL_FIELD_COLOR = new Color(151, 255, 0);
 	private final File image;
 	private final Color whiteBalance;
+	private final BufferedImage imageData;
 
 	public ImageReader(File file) throws IOException
 	{
 		this.image = file;
+		if(!file.canRead())
+			throw new IOException("File " + file + " can not be read");
 		whiteBalance = analyzeWhiteBalance();
+		imageData = ImageIO.read(image);
 	}
 
 	private Color analyzeWhiteBalance() throws IOException
@@ -52,7 +59,6 @@ public class ImageReader
 	{
 		final int size = calculateSampleSize(start, end);
 		Color[] samples = new Color[size];
-		BufferedImage imageData = ImageIO.read(image);
 
 		int xStart, xStop, yStart, yStop;
 		if(start.x < end.x)
@@ -144,7 +150,7 @@ public class ImageReader
 	{
 		final int distance = 6;
 		Set<Point> edges = new HashSet<Point>();
-		BufferedImage imageData = ImageIO.read(image);
+
 		for(int y = distance; y < imageData.getHeight(); y += 2)
 		{
 			for(int x = distance; x < imageData.getWidth(); x += 2)
@@ -196,5 +202,69 @@ public class ImageReader
 			return true;
 		
 		return false;
+	}
+	
+	public float readAligment()
+	{
+		return 0;
+	}
+	
+	public Field[] findControlFields()
+	{
+		final Field[] controlFields = new Field[3];
+		controlFields[0] = findField(CONTROL_FIELD_COLOR);
+		return controlFields;
+	}
+
+	public Field findField(Color fieldColor)
+	{
+		Point start = null;
+		Point end = null;
+		
+		List<Color> foundPixels = new ArrayList<Color>();
+		
+		final int imageHeight = imageData.getHeight();
+		final int imageWidth = imageData.getWidth();
+		
+		for(int y = 0; y < imageHeight; y++)
+		{
+			for(int x = 0; x < imageWidth; x++)
+			{
+				int pixel = imageData.getRGB(x, y);
+				Color color = getColor(pixel);
+				if(hasColor(color, fieldColor, 15))
+				{
+					foundPixels.add(color);
+					if(start == null)
+						start = new Point(x, y);
+					end = new Point(x, y);
+				}
+			}
+		}
+		
+		return new Field(start, end, foundPixels);
+	}
+	
+	public static boolean hasColor(Color color, Color fieldColor, int threshold)
+	{
+		final int diffRed = Math.abs(color.getRed() - fieldColor.getRed());
+		if(diffRed > threshold)
+			return false;
+		
+		final int diffGreen = Math.abs(color.getGreen() - fieldColor.getGreen());;
+		if(diffGreen > threshold)
+			return false;
+		
+		final int diffBlue = Math.abs(color.getBlue() - fieldColor.getBlue());;
+		if(diffBlue > threshold)
+			return false;
+		
+		return true;
+	}
+
+	public Field findField(Color controlFieldColor, Field fieldToSearchIn)
+	{
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
