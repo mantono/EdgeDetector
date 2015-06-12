@@ -1,6 +1,6 @@
 package diacheck.java.libs.imageTools;
 
-class HighNoiseException extends RuntimeException
+public class HighNoiseException extends RuntimeException
 {
 	private static final long serialVersionUID = 1685378872648020677L;
 	

@@ -46,12 +46,6 @@ public class FieldTest
 	}
 
 	@Test
-	public void testGetSize()
-	{
-		assertEquals(64, field.getSize());
-	}
-	
-	@Test
 	public void testGetAmountOfPixels()
 	{
 		assertEquals(3, field.getAmountOfPixels());

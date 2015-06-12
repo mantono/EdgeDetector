@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
+
+import diacheck.java.libs.Triangle;
 
 /**
  * 
@@ -31,9 +34,18 @@ public class ImageReader
 	{
 		this.image = file;
 		if(!file.canRead())
-			throw new IOException("File " + file + " can not be read");
-		whiteBalance = analyzeWhiteBalance();
+			throw new FileNotFoundException("File " + file + " can not be read");
 		imageData = ImageIO.read(image);
+		whiteBalance = analyzeWhiteBalance();
+		checkNoiseLevels();
+	}
+
+	private void checkNoiseLevels()
+	{
+		if(whiteBalance.getRed() - whiteBalance.getBlue() > 25)
+			throw new HighNoiseException("Noise is above allowed threshold, red: " + whiteBalance.getRed() + " - blue: " + whiteBalance.getBlue());
+		if(whiteBalance.getRed() - whiteBalance.getGreen() > 25)
+			throw new HighNoiseException("Noise is above allowed threshold, red: " + whiteBalance.getRed() + " - green: " + whiteBalance.getGreen());
 	}
 
 	private Color analyzeWhiteBalance() throws IOException
@@ -59,6 +71,7 @@ public class ImageReader
 	{
 		final int size = calculateSampleSize(start, end);
 		Color[] samples = new Color[size];
+		imageData.getRGB(1, 1);
 
 		int xStart, xStop, yStart, yStop;
 		if(start.x < end.x)
@@ -206,45 +219,93 @@ public class ImageReader
 	
 	public float readAligment()
 	{
-		return 0;
+		final Field[] controlFields = findControlFields();
+		Field topLeft, topRight;
+		topLeft = getTopLeftControlField(controlFields);
+		topRight = getTopRightControlField(controlFields);
+		Triangle triangle = new Triangle(topLeft.getStart(), topRight.getStart());
+		return triangle.getBottomLeftAngle();
+	}
+	
+
+
+	private Field getBottomControlField(Field[] fields)
+	{
+		if(fields[0].getStart().y > fields[1].getStart().y && fields[0].getStart().y > fields[2].getStart().y)
+			return fields[0];
+		if(fields[1].getStart().y > fields[0].getStart().y && fields[1].getStart().y > fields[2].getStart().y)
+			return fields[1];
+		return fields[2];
+	}
+
+	private Field getTopRightControlField(Field[] fields)
+	{
+		if(fields[0].getStart().x > fields[1].getStart().x && fields[0].getStart().x > fields[2].getStart().x)
+			return fields[0];
+		if(fields[1].getStart().x > fields[0].getStart().x && fields[1].getStart().x > fields[2].getStart().x)
+			return fields[1];
+		return fields[2];
+	}
+
+	private Field getTopLeftControlField(Field[] fields)
+	{
+		if(fields[0].getStart().x < fields[1].getStart().x && fields[0].getStart().x < fields[2].getStart().x)
+			return fields[0];
+		if(fields[1].getStart().x < fields[0].getStart().x && fields[1].getStart().x < fields[2].getStart().x)
+			return fields[1];
+		return fields[2];
 	}
 	
 	public Field[] findControlFields()
 	{
 		final Field[] controlFields = new Field[3];
 		controlFields[0] = findField(CONTROL_FIELD_COLOR);
+		controlFields[1] = findField(CONTROL_FIELD_COLOR, controlFields[0].getEnd());
+		controlFields[2] = findField(CONTROL_FIELD_COLOR, controlFields[1].getEnd());
 		return controlFields;
 	}
-
+	
 	public Field findField(Color fieldColor)
+	{
+		return findField(fieldColor, new Point(0, 0));
+	}
+
+	public Field findField(Color fieldColor, Point startingPoint)
 	{
 		Point start = null;
 		Point end = null;
 		
-		List<Color> foundPixels = new ArrayList<Color>();
+		List<Color> foundColors = new ArrayList<Color>();
 		
 		final int imageHeight = imageData.getHeight();
 		final int imageWidth = imageData.getWidth();
 		
-		for(int y = 0; y < imageHeight; y++)
+		for(int y = startingPoint.y; y < imageHeight; y++)
 		{
-			for(int x = 0; x < imageWidth; x++)
+			for(int x = startingPoint.x; x < imageWidth; x++)
 			{
 				int pixel = imageData.getRGB(x, y);
 				Color color = getColor(pixel);
 				if(hasColor(color, fieldColor, 15))
 				{
-					foundPixels.add(color);
+					foundColors.add(color);
 					if(start == null)
 						start = new Point(x, y);
 					end = new Point(x, y);
 				}
+				if(fieldIsFinished(x, y, end))
+					return new Field(start, end, foundColors);
 			}
 		}
 		
-		return new Field(start, end, foundPixels);
+		return new Field(start, end, foundColors);
 	}
 	
+	private boolean fieldIsFinished(int x, int y, Point end)
+	{
+		return end != null && x - end.x > 5 && y - end.y > 5;
+	}
+
 	public static boolean hasColor(Color color, Color fieldColor, int threshold)
 	{
 		final int diffRed = Math.abs(color.getRed() - fieldColor.getRed());

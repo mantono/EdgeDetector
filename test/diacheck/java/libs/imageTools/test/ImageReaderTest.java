@@ -6,6 +6,7 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Set;
 
@@ -16,6 +17,7 @@ import org.junit.Test;
 
 import diacheck.java.libs.imageTools.Field;
 import diacheck.java.libs.imageTools.ImageReader;
+import diacheck.java.libs.imageTools.HighNoiseException;
 
 public class ImageReaderTest
 {
@@ -24,6 +26,12 @@ public class ImageReaderTest
 	@Before
 	public void setUp() throws Exception
 	{
+	}
+	
+	@Test(expected=FileNotFoundException.class)
+	public void testNonExistingFile() throws IOException
+	{
+		new ImageReader(new File("not here"));
 	}
 
 	@Test
@@ -51,6 +59,12 @@ public class ImageReaderTest
 		assertTrue(redDiff < 2);
 		assertTrue(greenDiff < 2);
 		assertTrue(blueDiff < 2);
+	}
+	
+	@Test(expected=HighNoiseException.class)
+	public void testHighNoiseException() throws IOException
+	{
+		new ImageReader(new File(IMAGE_PATH + "no_flash_grey_card_high_noise.jpg"));
 	}
 
 	@Test
@@ -116,9 +130,22 @@ public class ImageReaderTest
 	public void testFindControlFields() throws IOException
 	{
 		final File input = new File(IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
-		assertTrue("Can't read file " + input, input.canRead());
-		ImageReader image = new ImageReader(input);	
+		ImageReader image = new ImageReader(input);
 		Field[] fields = image.findControlFields();
+		
+		assertTrue(fields[0] != null);
+		assertTrue(fields[1] != null);
+		assertTrue(fields[2] != null);
+		
+		assertTrue(fields[0].getAmountOfPixels() >= 2993);
+	}
+	
+	@Test
+	public void readAligment() throws IOException
+	{
+		final File input = new File(IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
+		ImageReader image = new ImageReader(input);
+		assertEquals(10.0f, image.readAligment(), 0.01);
 	}
 
 }

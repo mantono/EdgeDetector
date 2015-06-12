@@ -19,22 +19,13 @@ public class Field
 		this.startPosition = start;
 		this.endPosition = end;
 		this.pixels = pixels;
-		if(getSize() < pixels.size())
-			throw new IllegalArgumentException("The amount of pixels (" + pixels.size() + ") are greater than the given area allows ("+ getSize() +")");
 	}
 
 	public Field(final Point start, final Point end)
 	{
 		this.startPosition = start;
 		this.endPosition = end;
-		this.pixels = new ArrayList<Color>(getSize());
-	}
-	
-	public int getSize()
-	{
-		final int height = endPosition.y - startPosition.y;
-		final int width = endPosition.x - startPosition.x;
-		return width * height;
+		this.pixels = new ArrayList<Color>();
 	}
 	
 	public int getAmountOfPixels()
@@ -47,5 +38,15 @@ public class Field
 		Color[] pixelArray = new Color[pixels.size()];
 		pixelArray = pixels.toArray(pixelArray);
 		return ImageReader.getAverageColorForData(pixelArray);
+	}
+	
+	public Point getStart()
+	{
+		return startPosition;
+	}
+
+	public Point getEnd()
+	{
+		return endPosition;
 	}
 }
