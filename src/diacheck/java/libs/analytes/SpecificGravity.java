@@ -1,7 +1,6 @@
 package diacheck.java.libs.analytes;
 
-public class SpecificGravity implements Analyte
-{
+public class SpecificGravity
 
 	@Override
 	public double result()

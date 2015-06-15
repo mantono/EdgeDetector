@@ -1,7 +1,13 @@
 package diacheck.java.libs.imageTools;
 
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
 
 /**
  * 
@@ -11,14 +17,50 @@ import java.awt.image.BufferedImage;
 public class ImageTransformer
 {
 	private final BufferedImage imageData;
+	private final File image;
 	
-	public ImageTransformer(BufferedImage image)
+	public ImageTransformer(File file) throws IOException
 	{
-		this.imageData = image;
+		this.image = file;
+		if(!file.canRead())
+			throw new FileNotFoundException("File " + file + " can not be read");
+		imageData = ImageIO.read(image);
 	}
 	
 	public void rotate(final Point center, float degress)
 	{
-		
+		Graphics2D graphicsData = imageData.createGraphics();
+		//graphicsData.rotate(Math.toRadians(degress), center.x, center.y);
+		graphicsData.rotate(Math.toRadians(degress), imageData.getWidth(), imageData.getHeight());
+		graphicsData.drawImage(imageData, 0, 0, imageData.getWidth(), imageData.getHeight(), null);
+	}
+	
+	
+	
+	public boolean saveToFile(final File filePath) throws IOException
+	{
+		if(!ImageReader.fileType(filePath).equals("png"))
+			throw new IllegalArgumentException("File type must be \"png\" for file, but was " + ImageReader.fileType(filePath));
+		return ImageIO.write(imageData, "PNG", filePath);
+	}
+	
+	public boolean saveToFile() throws IOException
+	{
+		File newFile = new File(image.getAbsolutePath());
+		if(!ImageReader.fileType(newFile).equals("png"))
+			newFile = changeFileEndingToPNG(newFile);
+		return ImageIO.write(imageData, "PNG", newFile);
+	}
+
+	private File changeFileEndingToPNG(File filePath)
+	{
+		final String filename = filePath.getPath();
+		final String[] filenameSplitted = filename.split("\\.");
+		final int fileTypeIndex = filenameSplitted.length - 1;
+		filenameSplitted[fileTypeIndex] = "png";
+		StringBuilder newFileName = new StringBuilder();
+		for(String content : filenameSplitted)
+			newFileName.append(content);
+		return new File(newFileName.toString());
 	}
 }

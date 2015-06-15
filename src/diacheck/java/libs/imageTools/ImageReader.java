@@ -25,10 +25,13 @@ public class ImageReader
 	public final static int REDMASK = 0xff0000;
 	public final static int GREENMASK = 0x00ff00;
 	public final static int BLUEMASK = 0x0000ff;
+	public final static int RIGTH = 1;
+	public final static int LEFT = -1;
 	public final static Color CONTROL_FIELD_COLOR = new Color(151, 255, 0);
 	private final File image;
 	private final Color whiteBalance;
 	private final BufferedImage imageData;
+	private Point startOfFirstControlField;
 
 	public ImageReader(File file) throws IOException
 	{
@@ -215,6 +218,14 @@ public class ImageReader
 			return true;
 		
 		return false;
+	}	
+
+	public static String fileType(File filePath)
+	{
+		final String filename = filePath.getPath();
+		final String[] filenameSplitted = filename.split("\\.");
+		final int fileTypePosition = filenameSplitted.length - 1;
+		return filenameSplitted[fileTypePosition].toLowerCase();
 	}
 	
 	public float readAligment()
@@ -224,6 +235,7 @@ public class ImageReader
 		topLeft = getTopLeftControlField(controlFields);
 		topRight = getTopRightControlField(controlFields);
 		Triangle triangle = new Triangle(topLeft.getStart(), topRight.getStart());
+		startOfFirstControlField = topLeft.getStart();
 		return triangle.getBottomLeftAngle();
 	}
 	
@@ -260,8 +272,10 @@ public class ImageReader
 	{
 		final Field[] controlFields = new Field[3];
 		controlFields[0] = findField(CONTROL_FIELD_COLOR);
-		controlFields[1] = findField(CONTROL_FIELD_COLOR, controlFields[0].getEnd());
-		controlFields[2] = findField(CONTROL_FIELD_COLOR, controlFields[1].getEnd());
+		final Point startForSecondField = new Point(controlFields[0].getEnd().x + 1, controlFields[0].getEnd().y); 
+		controlFields[1] = findField(CONTROL_FIELD_COLOR, startForSecondField);
+		final Point startForThirdField = new Point(controlFields[1].getEnd().x + 1, controlFields[1].getEnd().y);
+		controlFields[2] = findField(CONTROL_FIELD_COLOR, startForThirdField);
 		return controlFields;
 	}
 	
@@ -270,37 +284,88 @@ public class ImageReader
 		return findField(fieldColor, new Point(0, 0));
 	}
 
-	public Field findField(Color fieldColor, Point startingPoint)
+	public Field findField(Color fieldColor, final Point startingPoint)
 	{
-		Point start = null;
-		Point end = null;
-		
 		List<Color> foundColors = new ArrayList<Color>();
 		
 		final int imageHeight = imageData.getHeight();
 		final int imageWidth = imageData.getWidth();
 		
-		for(int y = startingPoint.y; y < imageHeight; y++)
+		Point start = findFirstPixelOfField(fieldColor, startingPoint);
+		Point end = findFirstPixelOfField(fieldColor, startingPoint);
+		
+		int y = start.y;
+		int x = start.x;
+		int direction = RIGTH;
+		int searchedPixelsWithNoMatch = 0;
+		int searchArea = calculateSearchAreaSize(start, end);
+		
+		while(searchedPixelsWithNoMatch < searchArea)
 		{
-			for(int x = startingPoint.x; x < imageWidth; x++)
+			Color colorForCurrentPixel = getColor(imageData.getRGB(x, y));
+			if(hasColor(colorForCurrentPixel, fieldColor, 25))
 			{
-				int pixel = imageData.getRGB(x, y);
-				Color color = getColor(pixel);
-				if(hasColor(color, fieldColor, 15))
+				searchedPixelsWithNoMatch = 0;
+				foundColors.add(colorForCurrentPixel);
+				if(x > end.x)
 				{
-					foundColors.add(color);
-					if(start == null)
-						start = new Point(x, y);
 					end = new Point(x, y);
+					searchArea = calculateSearchAreaSize(start, end);
 				}
-				if(fieldIsFinished(x, y, end))
-					return new Field(start, end, foundColors);
+				if(x < start.x)
+				{
+					start = new Point(x, y);
+					searchArea = calculateSearchAreaSize(start, end);
+				}
 			}
+			else
+			{
+				if(x < start.x)
+				{
+					direction = RIGTH;
+					y++;
+				}
+				else if(x > end.x)
+				{
+					direction = LEFT;
+					y++;
+				}
+				searchedPixelsWithNoMatch++;
+			}
+			x += direction;
 		}
 		
+		end = new Point(end.x, y);
+
 		return new Field(start, end, foundColors);
 	}
 	
+	private int calculateSearchAreaSize(Point start, Point end)
+	{
+		return Math.abs(start.x - end.x)*2 + 25;
+	}
+
+	private Point findFirstPixelOfField(Color fieldColor, Point startingPoint)
+	{
+		final int imageHeight = imageData.getHeight();
+		final int imageWidth = imageData.getWidth();
+		int y = startingPoint.y;
+		int x = startingPoint.x;
+		
+		for(; y < imageHeight; y++)
+		{
+			for(; x < imageWidth ; x++)
+			{
+				int pixel = imageData.getRGB(x, y);
+				Color color = getColor(pixel);
+				if(hasColor(color, fieldColor, 25))
+					return new Point(x, y);
+			}
+			x = 0;
+		}
+		throw new IllegalStateException("Could not find a pixel with specified color (" + fieldColor + ") within threshold");
+	}
+
 	private boolean fieldIsFinished(int x, int y, Point end)
 	{
 		return end != null && x - end.x > 5 && y - end.y > 5;
@@ -327,5 +392,10 @@ public class ImageReader
 	{
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	public Point getStartOfFirstControlField()
+	{
+		return startOfFirstControlField;
 	}
 }

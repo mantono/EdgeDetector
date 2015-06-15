@@ -145,7 +145,16 @@ public class ImageReaderTest
 	{
 		final File input = new File(IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
 		ImageReader image = new ImageReader(input);
-		assertEquals(10.0f, image.readAligment(), 0.01);
+		assertEquals(10.0f, image.readAligment(), 0.8);
+	}
+	
+	@Test
+	public void testCheckFiletype()
+	{
+		File file = new File("/home/test/long/path/with.dots/test.jpg");
+		assertEquals("jpg", ImageReader.fileType(file));
+		file = new File("TEST.PNG");
+		assertEquals("png", ImageReader.fileType(file));
 	}
 
 }
