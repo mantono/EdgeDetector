@@ -13,18 +13,18 @@ public class Triangle
 		this.c = new Point(b.x, a.y);
 	}
 	
-	public float getBottomLeftAngle()
+	public double getBottomLeftAngle()
 	{
 		final double hypotenuse = getHypotenuse();
 		final double bottom = getBottomSide();
-		return (float) Math.toDegrees(Math.acos(bottom/hypotenuse));
+		return Math.acos(bottom/hypotenuse);
 	}
 	
-	public float getTopRightAngle()
+	public double getTopRightAngle()
 	{
 		final double hypotenuse = getHypotenuse();
 		final double right = getRightSide();
-		return (float) Math.toDegrees(Math.acos(right/hypotenuse));
+		return Math.acos(right/hypotenuse);
 	}
 	
 	public double getHypotenuse()

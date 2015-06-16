@@ -6,6 +6,7 @@ import java.awt.Point;
 import java.io.File;
 import java.io.IOException;
 
+import org.fest.util.Files;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,12 +37,40 @@ public class ImageTransformerTest
 		{
 			input = new File(IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
 			output = new File(IMAGE_OUTPUT_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.png");
+			if(output.canRead())
+				Files.delete(output);
+			assertFalse(output.canRead());
 			ImageReader image = new ImageReader(input);
-			float requiredRotation = image.readAligment();
-			assertEquals(10.0f, requiredRotation, 0.8);
+			double requiredRotation = image.readAligment();
 			ImageTransformer imageTransformed = new ImageTransformer(input);
-			Point startOfFirstControlField = image.getStartOfFirstControlField();
+			Point startOfFirstControlField = image.getLeftControlField().getStart();
 			imageTransformed.rotate(startOfFirstControlField, requiredRotation);
+			imageTransformed.saveToFile(output);
+			assertTrue(output.canRead());
+			assertTrue(output.length() > 0);
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	@Test
+	public void testRotateAndCrop() throws IOException
+	{
+		File input, output;
+		try
+		{
+			input = new File(IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
+			output = new File(IMAGE_OUTPUT_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.png");
+			ImageReader image = new ImageReader(input);
+			double requiredRotation = image.readAligment();
+			ImageTransformer imageTransformed = new ImageTransformer(input);
+			Point startOfFirstControlField = image.getLeftControlField().getStart();
+			imageTransformed.rotate(startOfFirstControlField, requiredRotation);
+			imageTransformed.saveToFile(output);
+			
+			imageTransformed.removePixelsOutsideControlFields();
 			imageTransformed.saveToFile(output);
 		}
 		catch(Exception e)

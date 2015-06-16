@@ -141,11 +141,25 @@ public class ImageReaderTest
 	}
 	
 	@Test
+	public void testFindControlFields2() throws IOException
+	{
+		final File input = new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped.png");
+		ImageReader image = new ImageReader(input);
+		Field[] fields = image.findControlFields();
+		
+		assertTrue(fields[0] != null);
+		assertTrue(fields[1] != null);
+		assertTrue(fields[2] != null);
+		
+		assertTrue(fields[0].getAmountOfPixels() >= 2993);
+	}
+	
+	@Test
 	public void readAligment() throws IOException
 	{
 		final File input = new File(IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
 		ImageReader image = new ImageReader(input);
-		assertEquals(10.0f, image.readAligment(), 0.8);
+		assertEquals(0.1884033450, image.readAligment(), 0.01);
 	}
 	
 	@Test

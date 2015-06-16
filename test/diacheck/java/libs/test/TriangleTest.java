@@ -24,22 +24,15 @@ public class TriangleTest
 	@Test
 	public void testGetBottomLeftAngle()
 	{
-		assertEquals(63.43495, triangle.getBottomLeftAngle(), 0.001); 
+		assertEquals(1.10714873, triangle.getBottomLeftAngle(), 0.001); 
 	}
 
 	@Test
 	public void testGetTopRightAngle()
 	{
-		assertEquals(26.56505, triangle.getTopRightAngle(), 0.001);
+		assertEquals(0.463647588, triangle.getTopRightAngle(), 0.001);
 	}
 	
-	@Test
-	public void testGetCorrectSum()
-	{
-		final double sumOfAllAngles = triangle.getBottomLeftAngle() + triangle.getTopRightAngle() + 90;
-		assertEquals(180, sumOfAllAngles, 0.01);
-	}
-
 	@Test
 	public void testGetHypotenuse()
 	{

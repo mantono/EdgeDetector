@@ -2,6 +2,7 @@ package diacheck.java.libs.imageTools;
 
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,7 +17,7 @@ import javax.imageio.ImageIO;
 
 public class ImageTransformer
 {
-	private final BufferedImage imageData;
+	private BufferedImage imageData;
 	private final File image;
 	
 	public ImageTransformer(File file) throws IOException
@@ -27,12 +28,47 @@ public class ImageTransformer
 		imageData = ImageIO.read(image);
 	}
 	
-	public void rotate(final Point center, float degress)
+	public void rotate(final Point center, double radians) throws IOException
 	{
 		Graphics2D graphicsData = imageData.createGraphics();
-		//graphicsData.rotate(Math.toRadians(degress), center.x, center.y);
-		graphicsData.rotate(Math.toRadians(degress), imageData.getWidth(), imageData.getHeight());
+		graphicsData.translate(-center.x+200, -center.y);
+		//graphicsData.rotate(radians, imageData.getWidth(), imageData.getHeight());
+		graphicsData.rotate(radians);
+		//graphicsData.translate(center.x, center.y);
 		graphicsData.drawImage(imageData, 0, 0, imageData.getWidth(), imageData.getHeight(), null);
+		graphicsData.dispose();
+		
+		// TEST
+//		final File debug = new File("/tmp/tempDebug.png"); 
+//		
+//		graphicsData.translate(imageData.getWidth(), imageData.getHeight());
+//		graphicsData.drawImage(imageData, 0, 0, imageData.getWidth(), imageData.getHeight(), null);
+//		saveToFile(debug);
+//		
+//		graphicsData.rotate(radians);
+//		graphicsData.drawImage(imageData, 0, 0, imageData.getWidth(), imageData.getHeight(), null);
+//		saveToFile(debug);
+//		
+//		graphicsData.translate(-imageData.getWidth()+300, -imageData.getHeight()+300);
+//		graphicsData.drawImage(imageData, 0, 0, imageData.getWidth(), imageData.getHeight(), null);
+//		saveToFile(debug);
+	}
+	
+	public void removePixelsOutsideControlFields() throws IOException
+	{
+		ImageReader reader = new ImageReader(imageData);
+		reader.readAligment();
+		Point start = reader.getLeftControlField().getStart();
+		Point upperRight = reader.getRightControlField().getEnd();
+		final int width = upperRight.x - start.x;
+		final int height = reader.getBottomControlField().getEnd().y - start.y;
+		System.out.println(width);
+		System.out.println(reader.getBottomControlField().getEnd().y);
+		imageData = imageData.getSubimage(start.x, start.y, 2695, 1349);
+		
+//		Graphics2D graphicsData = imageData.createGraphics();
+//		graphicsData.drawImage(imageData, start.x, start.y, width, height, null);
+//		graphicsData.dispose();
 	}
 	
 	
