@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -138,6 +139,16 @@ public class ImageReaderTest
 		assertTrue(fields[2] != null);
 		
 		assertTrue(fields[0].getAmountOfPixels() >= 2993);
+	}
+	
+	@Test
+	public void testFindAllControlFields() throws IOException
+	{
+		final File input = new File(IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
+		ImageReader image = new ImageReader(input);
+		List<Point> pixelsInControlFields = image.findRandomPixelInEachControlField();
+		assertEquals(3, pixelsInControlFields.size());
+		
 	}
 	
 	@Test

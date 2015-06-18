@@ -37,21 +37,6 @@ public class ImageTransformer
 		//graphicsData.translate(center.x, center.y);
 		graphicsData.drawImage(imageData, 0, 0, imageData.getWidth(), imageData.getHeight(), null);
 		graphicsData.dispose();
-		
-		// TEST
-//		final File debug = new File("/tmp/tempDebug.png"); 
-//		
-//		graphicsData.translate(imageData.getWidth(), imageData.getHeight());
-//		graphicsData.drawImage(imageData, 0, 0, imageData.getWidth(), imageData.getHeight(), null);
-//		saveToFile(debug);
-//		
-//		graphicsData.rotate(radians);
-//		graphicsData.drawImage(imageData, 0, 0, imageData.getWidth(), imageData.getHeight(), null);
-//		saveToFile(debug);
-//		
-//		graphicsData.translate(-imageData.getWidth()+300, -imageData.getHeight()+300);
-//		graphicsData.drawImage(imageData, 0, 0, imageData.getWidth(), imageData.getHeight(), null);
-//		saveToFile(debug);
 	}
 	
 	public void removePixelsOutsideControlFields() throws IOException
@@ -65,10 +50,6 @@ public class ImageTransformer
 		System.out.println(width);
 		System.out.println(reader.getBottomControlField().getEnd().y);
 		imageData = imageData.getSubimage(start.x, start.y, 2695, 1349);
-		
-//		Graphics2D graphicsData = imageData.createGraphics();
-//		graphicsData.drawImage(imageData, start.x, start.y, width, height, null);
-//		graphicsData.dispose();
 	}
 	
 	
