@@ -138,7 +138,7 @@ public class ImageReaderTest
 		assertTrue(fields[1] != null);
 		assertTrue(fields[2] != null);
 		
-		assertTrue(fields[0].getAmountOfPixels() >= 2993);
+		assertTrue(fields[0].getAmountOfPixels() >= 3200);
 	}
 	
 	@Test
@@ -146,7 +146,7 @@ public class ImageReaderTest
 	{
 		final File input = new File(IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
 		ImageReader image = new ImageReader(input);
-		List<Point> pixelsInControlFields = image.findRandomPixelInEachControlField();
+		List<Point> pixelsInControlFields = image.findRandomPixelInEachField(3, ImageReader.CONTROL_FIELD_COLOR);
 		assertEquals(3, pixelsInControlFields.size());
 		
 	}

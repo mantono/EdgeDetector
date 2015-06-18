@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 
 import javax.imageio.ImageIO;
 
@@ -248,8 +247,6 @@ public class ImageReader
 		return triangle.getBottomLeftAngle();
 	}
 	
-
-
 	private void setControlFields(Field[] controlFields)
 	{
 		leftControlField = getTopLeftControlField(controlFields);
@@ -288,21 +285,22 @@ public class ImageReader
 	{
 		checkedPixels.clear();
 		final Field[] controlFields = new Field[3];
-		List<Point> pixelsFromFields = findRandomPixelInEachControlField();
+		List<Point> pixelsFromFields = findRandomPixelInEachField(3, CONTROL_FIELD_COLOR);
 		controlFields[0] = findField(CONTROL_FIELD_COLOR, pixelsFromFields.get(0)); 
 		controlFields[1] = findField(CONTROL_FIELD_COLOR, pixelsFromFields.get(1));
 		controlFields[2] = findField(CONTROL_FIELD_COLOR, pixelsFromFields.get(2));
 		return controlFields;
 	}
 
-	public List<Point> findRandomPixelInEachControlField()
+	public List<Point> findRandomPixelInEachField(int numberOfFields, Color fieldColor)
 	{
 		checkedPixels.clear();
-		List<Point> controlFields = new ArrayList<Point>(3);
+		List<Point> controlFields = new ArrayList<Point>(numberOfFields);
 		
 		final int width = imageData.getWidth();
 		final int height = imageData.getHeight();
 		final int imageResolution = width*height;
+		final int expectedFieldSize = imageResolution/50000;
 		
 		int x = 0;
 		int y = 0;
@@ -310,16 +308,16 @@ public class ImageReader
 		
 		//TODO gör om denna för concurrent?
 		
-		while(controlFields.size() < 3 && checkedPixels.size() < imageResolution)
+		while(controlFields.size() < numberOfFields && checkedPixels.size() < imageResolution)
 		{
 			Point currentPixel = new Point(x, y);
 			checkedPixels.add(currentPixel);
 			Color pixelColor = getColor(imageData.getRGB(x, y));
-			if(hasColor(pixelColor, CONTROL_FIELD_COLOR, 25))
+			if(hasColor(pixelColor, fieldColor, 25))
 			{
 				boolean pixelBelongsToAlreadyFoundField = false;
 				for(Point pixel : controlFields)
-					if(Point.distance(currentPixel.x, currentPixel.y, pixel.x, pixel.y) < 200)
+					if(Point.distance(currentPixel.x, currentPixel.y, pixel.x, pixel.y) < expectedFieldSize)
 						pixelBelongsToAlreadyFoundField = true;
 				if(!pixelBelongsToAlreadyFoundField)
 					controlFields.add(currentPixel);
@@ -397,91 +395,10 @@ public class ImageReader
 
 		return new Field(start, end, foundColors);
 	}
-
-	public Field findField(Color fieldColor)
-	{
-		List<Color> foundColors = new ArrayList<Color>();
-		
-		Point start = findFirstPixelOfField(fieldColor);
-		Point end = new Point(start.x, start.y);
-		
-		int y = start.y;
-		int x = start.x;
-		int direction = RIGTH;
-		int searchedPixelsWithNoMatch = 0;
-		int searchArea = calculateSearchAreaSize(start, end);
-		
-		while(searchedPixelsWithNoMatch < searchArea)
-		{
-			Color colorForCurrentPixel = getColor(imageData.getRGB(x, y));
-			Point currentPixel = new Point(x, y);
-			if(checkedPixels.contains(currentPixel))
-				searchedPixelsWithNoMatch = 0;
-			else if(hasColor(colorForCurrentPixel, fieldColor, 25))
-			{
-				searchedPixelsWithNoMatch = 0;
-				foundColors.add(colorForCurrentPixel);
-				if(x > end.x)
-				{
-					end = new Point(x, y);
-					searchArea = calculateSearchAreaSize(start, end);
-				}
-				if(x < start.x)
-				{
-					start = new Point(x, y);
-					searchArea = calculateSearchAreaSize(start, end);
-				}
-			}
-			else
-			{
-				if(x < start.x)
-				{
-					direction = RIGTH;
-					y++;
-				}
-				else if(x > end.x)
-				{
-					direction = LEFT;
-					y++;
-				}
-				searchedPixelsWithNoMatch++;
-			}
-			checkedPixels.add(currentPixel);
-			x += direction;
-		}
-		
-		end = new Point(end.x, y);
-
-		return new Field(start, end, foundColors);
-	}
 	
 	private int calculateSearchAreaSize(Point start, Point end)
 	{
 		return Math.abs(start.x - end.x)*2 + 25;
-	}
-
-	private Point findFirstPixelOfField(Color fieldColor)
-	{
-		final int imageHeight = imageData.getHeight();
-		final int imageWidth = imageData.getWidth();
-		
-		int x = 0;
-		for(int y = 0; y < imageHeight; y++)
-		{
-			for(x = 0; x < imageWidth; x++)
-			{
-				int pixel = imageData.getRGB(x, y);
-				Color color = getColor(pixel);
-				if(hasColor(color, fieldColor, 25))
-				{
-					Point currentPixel = new Point(x, y);
-					if(!checkedPixels.contains(currentPixel))
-						return currentPixel;
-				}
-			}
-			x = 0;
-		}
-		throw new IllegalStateException("Could not find a pixel with specified color (" + fieldColor + ") within threshold");
 	}
 	
 	private Point findFirstPixelOfField(Color fieldColor, Point point)
@@ -509,11 +426,6 @@ public class ImageReader
 		return current;
 	}
 
-	private boolean fieldIsFinished(int x, int y, Point end)
-	{
-		return end != null && x - end.x > 5 && y - end.y > 5;
-	}
-
 	public static boolean hasColor(Color color, Color fieldColor, int threshold)
 	{
 		final int diffRed = Math.abs(color.getRed() - fieldColor.getRed());
@@ -529,12 +441,6 @@ public class ImageReader
 			return false;
 		
 		return true;
-	}
-
-	public Field findField(Color controlFieldColor, Field fieldToSearchIn)
-	{
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	public Field getLeftControlField()
