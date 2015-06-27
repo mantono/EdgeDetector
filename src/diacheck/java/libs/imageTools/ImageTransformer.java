@@ -2,7 +2,6 @@ package diacheck.java.libs.imageTools;
 
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -31,14 +30,11 @@ public class ImageTransformer
 	public void rotate(final Point center, double radians) throws IOException
 	{
 		Graphics2D graphicsData = imageData.createGraphics();
-		graphicsData.translate(-center.x+200, -center.y);
-		//graphicsData.rotate(radians, imageData.getWidth(), imageData.getHeight());
-		graphicsData.rotate(radians);
-		//graphicsData.translate(center.x, center.y);
+		graphicsData.rotate(radians, imageData.getWidth(), imageData.getHeight()/2);
 		graphicsData.drawImage(imageData, 0, 0, imageData.getWidth(), imageData.getHeight(), null);
 		graphicsData.dispose();
 	}
-	
+
 	public void removePixelsOutsideControlFields() throws IOException
 	{
 		ImageReader reader = new ImageReader(imageData);
