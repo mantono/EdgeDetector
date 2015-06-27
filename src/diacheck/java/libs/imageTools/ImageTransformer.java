@@ -39,13 +39,13 @@ public class ImageTransformer
 	{
 		ImageReader reader = new ImageReader(imageData);
 		reader.readAligment();
+		
 		Point start = reader.getLeftControlField().getStart();
 		Point upperRight = reader.getRightControlField().getEnd();
+		
 		final int width = upperRight.x - start.x;
 		final int height = reader.getBottomControlField().getEnd().y - start.y;
-		System.out.println(width);
-		System.out.println(reader.getBottomControlField().getEnd().y);
-		imageData = imageData.getSubimage(start.x, start.y, 2695, 1349);
+		imageData = imageData.getSubimage(start.x, start.y, width, height);
 	}
 	
 	
