@@ -8,24 +8,24 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
+
 public class Field
 {
-	private final Point startPosition;
-	private final Point endPosition;
 	private final List<Color> pixels;
+	private final FieldType fieldtype;
 	
-	public Field(final Point start, final Point end, final List<Color> pixels)
+	public Field(FieldType type, final List<Color> pixels)
 	{
-		this.startPosition = start;
-		this.endPosition = end;
 		this.pixels = pixels;
+		this.fieldtype = type;
 	}
-
-	public Field(final Point start, final Point end)
+	
+	@SuppressWarnings("unchecked")
+	public Field(FieldType type, final Color[] pixels)
 	{
-		this.startPosition = start;
-		this.endPosition = end;
-		this.pixels = new ArrayList<Color>();
+		this.pixels = (List<Color>) Arrays.asList(pixels);
+		this.fieldtype = type;
 	}
 	
 	public int getAmountOfPixels()
@@ -33,20 +33,25 @@ public class Field
 		return pixels.size();
 	}
 	
-	public Color getAverageColor()
+	public FieldType getFieldType()
 	{
-		Color[] pixelArray = new Color[pixels.size()];
-		pixelArray = pixels.toArray(pixelArray);
-		return ImageReader.getAverageColorForData(pixelArray);
-	}
-	
-	public Point getStart()
-	{
-		return startPosition;
+		return this.fieldtype;
 	}
 
-	public Point getEnd()
+	public Color getAverageColor()
 	{
-		return endPosition;
+		int red, green, blue;
+		red = green = blue = 0;
+		for(Color sample : pixels)
+		{
+			red += sample.getRed();
+			green += sample.getGreen();
+			blue += sample.getBlue();
+		}
+		red /= pixels.size();
+		green /= pixels.size();
+		blue /= pixels.size();
+
+		return new Color(red, green, blue);
 	}
 }

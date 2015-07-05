@@ -17,6 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import diacheck.java.libs.imageTools.Field;
+import diacheck.java.libs.imageTools.FieldType;
 import diacheck.java.libs.imageTools.ImageReader;
 import diacheck.java.libs.imageTools.HighNoiseException;
 
@@ -35,33 +36,7 @@ public class ImageReaderTest
 		new ImageReader(new File("not here"));
 	}
 
-	@Test
-	public void testColorAnalysisOfFocuedImageWithFlashOnTealAreaAndSyntheticGreyArea()
-			throws IOException
-	{
-		final File input = new File(IMAGE_PATH + "flash_sharp1_with_fake_grey_area.png");
-		assertTrue("Can't read file " + input, input.canRead());
-		ImageReader image = new ImageReader(input);
 		
-		final Point upperLeftCorner = new Point(1093, 1091);
-		final Point lowerRightCorner = new Point(1212, 1212);
-		Color averageColor = image.getAverageColorForCoordinates(upperLeftCorner, lowerRightCorner);
-
-		/*
-		 * Det förväntade resultatet är beräknat efter manuell uträkning på 14
-		 * olika punkter i mittersta stickan för värdet på ljusblått fält
-		 */
-		final Color expectedResult = new Color(89, 141, 143);
-
-		final int redDiff = Math.abs(expectedResult.getRed() - averageColor.getRed());
-		final int greenDiff = Math.abs(expectedResult.getGreen() - averageColor.getGreen());
-		final int blueDiff = Math.abs(expectedResult.getBlue() - averageColor.getBlue());
-
-		assertTrue(redDiff < 2);
-		assertTrue(greenDiff < 2);
-		assertTrue(blueDiff < 2);
-	}
-	
 	@Test(expected=HighNoiseException.class)
 	public void testHighNoiseException() throws IOException
 	{
@@ -128,41 +103,13 @@ public class ImageReaderTest
 	}
 	
 	@Test
-	public void testFindControlFields() throws IOException
-	{
-		final File input = new File(IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
-		ImageReader image = new ImageReader(input);
-		Field[] fields = image.findControlFields();
-		
-		assertTrue(fields[0] != null);
-		assertTrue(fields[1] != null);
-		assertTrue(fields[2] != null);
-		
-		assertTrue(fields[0].getAmountOfPixels() >= 3200);
-	}
-	
-	@Test
 	public void testFindAllControlFields() throws IOException
 	{
 		final File input = new File(IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
 		ImageReader image = new ImageReader(input);
-		List<Point> pixelsInControlFields = image.findRandomPixelInEachField(3, ImageReader.CONTROL_FIELD_COLOR);
+		List<Point> pixelsInControlFields = image.findRandomPixelInEachField(3, FieldType.CONTROL.getColor());
 		assertEquals(3, pixelsInControlFields.size());
 		
-	}
-	
-	@Test
-	public void testFindControlFields2() throws IOException
-	{
-		final File input = new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped.png");
-		ImageReader image = new ImageReader(input);
-		Field[] fields = image.findControlFields();
-		
-		assertTrue(fields[0] != null);
-		assertTrue(fields[1] != null);
-		assertTrue(fields[2] != null);
-		
-		assertTrue(fields[0].getAmountOfPixels() >= 2993);
 	}
 	
 	@Test
@@ -180,6 +127,18 @@ public class ImageReaderTest
 		assertEquals("jpg", ImageReader.fileType(file));
 		file = new File("TEST.PNG");
 		assertEquals("png", ImageReader.fileType(file));
+	}
+	
+	@Test
+	public void testLocateField() throws IOException
+	{
+		final File input = new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped.png");
+		assertTrue("Can't read file " + input, input.canRead());
+		ImageReader image = new ImageReader(input);
+		Field whiteBalanceField = image.locateField(FieldType.WHITE_BALANCE, 0.1948, 0.6611);
+		
+		assertTrue(whiteBalanceField != null);
+		assertTrue(whiteBalanceField.getAmountOfPixels() > 0);
 	}
 
 }

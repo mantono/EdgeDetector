@@ -43,7 +43,7 @@ public class ImageTransformerTest
 			ImageReader image = new ImageReader(input);
 			double requiredRotation = image.readAligment();
 			ImageTransformer imageTransformed = new ImageTransformer(input);
-			Point startOfFirstControlField = image.getLeftControlField().getStart();
+			Point startOfFirstControlField = image.getLeftControlField();
 			imageTransformed.rotate(startOfFirstControlField, requiredRotation);
 			imageTransformed.saveToFile(output);
 			assertTrue(output.canRead());
@@ -66,7 +66,7 @@ public class ImageTransformerTest
 			ImageReader image = new ImageReader(input);
 			double requiredRotation = image.readAligment();
 			ImageTransformer imageTransformed = new ImageTransformer(input);
-			Point startOfFirstControlField = image.getLeftControlField().getStart();
+			Point startOfFirstControlField = image.getLeftControlField();
 			imageTransformed.rotate(startOfFirstControlField, requiredRotation);
 			imageTransformed.saveToFile(output);
 			

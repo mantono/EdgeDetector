@@ -27,14 +27,14 @@ public class ImageReader
 	public final static int BLUEMASK = 0x0000ff;
 	public final static int RIGTH = 1;
 	public final static int LEFT = -1;
-	public final static Color CONTROL_FIELD_COLOR = new Color(151, 255, 0);
 	private final File imageFile;
 	private final Color whiteBalance;
 	private final BufferedImage imageData;
+	private final int errorThreshold;
 	private final Set<Point> checkedPixels = new HashSet<Point>();;
-	private Field leftControlField;
-	private Field rightControlField;
-	private Field bottomControlField;
+	private Point leftControlField;
+	private Point rightControlField;
+	private Point bottomControlField;
 
 	public ImageReader(File file) throws IOException
 	{
@@ -42,6 +42,7 @@ public class ImageReader
 		if(!file.canRead())
 			throw new FileNotFoundException("File " + file + " can not be read");
 		imageData = ImageIO.read(imageFile);
+		this.errorThreshold = (int) ((imageData.getHeight() * imageData.getWidth())*0.05);
 		whiteBalance = analyzeWhiteBalance();
 		checkNoiseLevels();
 	}
@@ -50,6 +51,7 @@ public class ImageReader
 	{
 		this.imageFile = null;
 		this.imageData = bufferedImage;
+		this.errorThreshold = (int) ((imageData.getHeight() * imageData.getWidth())*0.05);
 		whiteBalance = analyzeWhiteBalance();
 		checkNoiseLevels();		
 	}
@@ -65,20 +67,13 @@ public class ImageReader
 	private Color analyzeWhiteBalance() throws IOException
 	{
 		Color[] whiteBalanceSamples = collectWhiteBalanceData();
-		return getAverageColorForData(whiteBalanceSamples);
+		Field whiteBalance = new Field(FieldType.WHITE_BALANCE, whiteBalanceSamples);
+		return whiteBalance.getAverageColor();
 	}
 
 	private Color[] collectWhiteBalanceData() throws IOException
 	{
 		return pickColorSamples(new Point(429, 428), new Point(443, 442));
-	}
-
-	public Color getAverageColorForCoordinates(Point start, Point end)
-			throws IOException
-	{
-		Color[] colorSamples = pickColorSamples(start, end);
-		Color averageColor = getAverageColorForData(colorSamples);
-		return whiteBalanceCompensation(averageColor);
 	}
 
 	private Color[] pickColorSamples(Point start, Point end) throws IOException
@@ -141,23 +136,6 @@ public class ImageReader
 		return new Color(averageColor.getRed() + redGreenDiff, averageColor.getGreen(), averageColor.getBlue() + blueGreenDiff);
 	}
 
-	public static Color getAverageColorForData(Color[] colorSamples)
-	{
-		int red, green, blue;
-		red = green = blue = 0;
-		for(Color sample : colorSamples)
-		{
-			red += sample.getRed();
-			green += sample.getGreen();
-			blue += sample.getBlue();
-		}
-		red /= colorSamples.length;
-		green /= colorSamples.length;
-		blue /= colorSamples.length;
-
-		return new Color(red, green, blue);
-	}
-
 	private static int getRed(final int pixel)
 	{
 		return (pixel & REDMASK) >> 16;
@@ -173,6 +151,7 @@ public class ImageReader
 		return pixel & BLUEMASK;
 	}
 
+	//FIXME behövs verkligen denna metod? Den anropas aldrig.
 	public Set<Point> findEdges() throws IOException
 	{
 		final int distance = 6;
@@ -241,55 +220,55 @@ public class ImageReader
 	
 	public double readAligment()
 	{
-		final Field[] controlFields = findControlFields();
-		setControlFields(controlFields);
-		Triangle triangle = new Triangle(leftControlField.getStart(), rightControlField.getStart());
+		final Point[] controlFields = findControlFields();
+		setControlFieldPositions(controlFields);
+		Triangle triangle = new Triangle(leftControlField, rightControlField);
 		return triangle.getBottomLeftAngle();
 	}
 	
-	private void setControlFields(Field[] controlFields)
+	private void setControlFieldPositions(Point[] controlFields)
 	{
 		leftControlField = getTopLeftControlField(controlFields);
 		rightControlField = getTopRightControlField(controlFields);
 		bottomControlField = getBottomControlField(controlFields);		
 	}
 
-	private Field getBottomControlField(Field[] fields)
+	private Point getBottomControlField(Point[] fields)
 	{
-		if(fields[0].getStart().y > fields[1].getStart().y && fields[0].getStart().y > fields[2].getStart().y)
+		if(fields[0].y > fields[1].y && fields[0].y > fields[2].y)
 			return fields[0];
-		if(fields[1].getStart().y > fields[0].getStart().y && fields[1].getStart().y > fields[2].getStart().y)
+		if(fields[1].y > fields[0].y && fields[1].y > fields[2].y)
 			return fields[1];
 		return fields[2];
 	}
 
-	private Field getTopRightControlField(Field[] fields)
+	private Point getTopRightControlField(Point[] fields)
 	{
-		if(fields[0].getStart().x > fields[1].getStart().x && fields[0].getStart().x > fields[2].getStart().x)
+		if(fields[0].x > fields[1].x && fields[0].x > fields[2].x)
 			return fields[0];
-		if(fields[1].getStart().x > fields[0].getStart().x && fields[1].getStart().x > fields[2].getStart().x)
+		if(fields[1].x > fields[0].x && fields[1].x > fields[2].x)
 			return fields[1];
 		return fields[2];
 	}
 
-	private Field getTopLeftControlField(Field[] fields)
+	private Point getTopLeftControlField(Point[] fields)
 	{
-		if(fields[0].getStart().x < fields[1].getStart().x && fields[0].getStart().x < fields[2].getStart().x)
+		if(fields[0].x < fields[1].x && fields[0].x < fields[2].x)
 			return fields[0];
-		if(fields[1].getStart().x < fields[0].getStart().x && fields[1].getStart().x < fields[2].getStart().x)
+		if(fields[1].x < fields[0].x && fields[1].x < fields[2].x)
 			return fields[1];
 		return fields[2];
 	}
 	
-	public Field[] findControlFields()
+	public Point[] findControlFields()
 	{
 		checkedPixels.clear();
-		final Field[] controlFields = new Field[3];
-		List<Point> pixelsFromFields = findRandomPixelInEachField(3, CONTROL_FIELD_COLOR);
-		controlFields[0] = findField(CONTROL_FIELD_COLOR, pixelsFromFields.get(0)); 
-		controlFields[1] = findField(CONTROL_FIELD_COLOR, pixelsFromFields.get(1));
-		controlFields[2] = findField(CONTROL_FIELD_COLOR, pixelsFromFields.get(2));
-		return controlFields;
+		final Point[] controlFieldPositions = new Point[3];
+		List<Point> pixelsFromFields = findRandomPixelInEachField(3, FieldType.CONTROL.getColor());
+		controlFieldPositions[0] = findFirstPixelOfField(FieldType.CONTROL, pixelsFromFields.get(0)); 
+		controlFieldPositions[1] = findFirstPixelOfField(FieldType.CONTROL, pixelsFromFields.get(1));
+		controlFieldPositions[2] = findFirstPixelOfField(FieldType.CONTROL, pixelsFromFields.get(2));
+		return controlFieldPositions;
 	}
 
 	public List<Point> findRandomPixelInEachField(int numberOfFields, Color fieldColor)
@@ -339,11 +318,16 @@ public class ImageReader
 		return controlFields;
 	}
 	
-	private Field findField(Color fieldColor, Point point)
+	public Field locateField(FieldType fieldType, double distanceRatioX, double distanceRatioY)
+	{
+		return new Field(fieldType, new ArrayList<Color>());
+	}
+	
+	private Field findRestOfField(FieldType fieldType, Point point)
 	{
 		List<Color> foundColors = new ArrayList<Color>();
 		
-		Point start = findFirstPixelOfField(fieldColor, point);
+		Point start = findFirstPixelOfField(fieldType, point);
 		Point end = new Point(start.x, start.y);
 		
 		int y = start.y;
@@ -358,7 +342,7 @@ public class ImageReader
 			Point currentPixel = new Point(x, y);
 			if(checkedPixels.contains(currentPixel))
 				searchedPixelsWithNoMatch = 0;
-			else if(hasColor(colorForCurrentPixel, fieldColor, 25))
+			else if(hasColor(colorForCurrentPixel, fieldType.getPermittedColors(), fieldType.getThreshold()))
 			{
 				searchedPixelsWithNoMatch = 0;
 				foundColors.add(colorForCurrentPixel);
@@ -393,7 +377,7 @@ public class ImageReader
 		
 		end = new Point(end.x, y);
 
-		return new Field(start, end, foundColors);
+		return new Field(fieldType, foundColors);
 	}
 	
 	private int calculateSearchAreaSize(Point start, Point end)
@@ -401,7 +385,7 @@ public class ImageReader
 		return Math.abs(start.x - end.x)*2 + 25;
 	}
 	
-	private Point findFirstPixelOfField(Color fieldColor, Point point)
+	private Point findFirstPixelOfField(FieldType fieldType, Point point)
 	{
 		Point current = point;
 		Point left = new Point(current.x-1, current.y);
@@ -410,9 +394,11 @@ public class ImageReader
 		Color leftColor = getColor(imageData.getRGB(left.x, left.y));
 		Color upColor = getColor(imageData.getRGB(up.x, up.y));
 		
-		while(hasColor(leftColor, fieldColor, 25) || hasColor(upColor, fieldColor, 25))
+		final byte colorThreshold = fieldType.getThreshold();
+		
+		while(hasColor(leftColor, fieldType.getPermittedColors(), colorThreshold) || hasColor(upColor, fieldType.getPermittedColors(), colorThreshold))
 		{
-			if(hasColor(leftColor, fieldColor, 25))
+			if(hasColor(leftColor, fieldType.getPermittedColors(), colorThreshold))
 				current = left;
 			else
 				current = up;
@@ -426,34 +412,45 @@ public class ImageReader
 		return current;
 	}
 
-	public static boolean hasColor(Color color, Color fieldColor, int threshold)
+	public static boolean hasColor(Color matchingColor, Color fieldColor, int threshold)
 	{
-		final int diffRed = Math.abs(color.getRed() - fieldColor.getRed());
+		final int diffRed = Math.abs(matchingColor.getRed() - fieldColor.getRed());
 		if(diffRed > threshold)
 			return false;
 		
-		final int diffGreen = Math.abs(color.getGreen() - fieldColor.getGreen());;
+		final int diffGreen = Math.abs(matchingColor.getGreen() - fieldColor.getGreen());;
 		if(diffGreen > threshold)
 			return false;
 		
-		final int diffBlue = Math.abs(color.getBlue() - fieldColor.getBlue());;
+		final int diffBlue = Math.abs(matchingColor.getBlue() - fieldColor.getBlue());;
 		if(diffBlue > threshold)
 			return false;
 		
 		return true;
 	}
+	
+	public static boolean hasColor(Color matchingColor, Color[] fieldColors, int threshold)
+	{
+		for(Color color : fieldColors)
+		{
+			if(hasColor(matchingColor, color, threshold))
+				return true;
+		}
+		
+		return false;
+	}
 
-	public Field getLeftControlField()
+	public Point getLeftControlField()
 	{
 		return leftControlField;
 	}
 	
-	public Field getRightControlField()
+	public Point getRightControlField()
 	{
 		return rightControlField;
 	}
 	
-	public Field getBottomControlField()
+	public Point getBottomControlField()
 	{
 		return bottomControlField;
 	}

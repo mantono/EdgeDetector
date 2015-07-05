@@ -40,11 +40,11 @@ public class ImageTransformer
 		ImageReader reader = new ImageReader(imageData);
 		reader.readAligment();
 		
-		Point start = reader.getLeftControlField().getStart();
-		Point upperRight = reader.getRightControlField().getEnd();
+		Point start = reader.getLeftControlField();
+		Point upperRight = reader.getRightControlField();
 		
 		final int width = upperRight.x - start.x;
-		final int height = reader.getBottomControlField().getEnd().y - start.y;
+		final int height = reader.getBottomControlField().y - start.y;
 		imageData = imageData.getSubimage(start.x, start.y, width, height);
 	}
 	
