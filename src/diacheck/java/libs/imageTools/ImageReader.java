@@ -30,7 +30,6 @@ public class ImageReader
 	private final File imageFile;
 	private final Color whiteBalance;
 	private final BufferedImage imageData;
-	private final int errorThreshold;
 	private Point leftControlField;
 	private Point rightControlField;
 	private Point bottomControlField;
@@ -41,7 +40,6 @@ public class ImageReader
 		if(!file.canRead())
 			throw new FileNotFoundException("File " + file + " can not be read");
 		imageData = ImageIO.read(imageFile);
-		this.errorThreshold = (int) ((imageData.getHeight()* 0.05 * imageData.getWidth())* 0.05);
 		whiteBalance = analyzeWhiteBalance();
 		checkNoiseLevels();
 	}
@@ -50,7 +48,6 @@ public class ImageReader
 	{
 		this.imageFile = null;
 		this.imageData = bufferedImage;
-		this.errorThreshold = (int) ((imageData.getHeight() * imageData.getWidth())*0.05);
 		whiteBalance = analyzeWhiteBalance();
 		checkNoiseLevels();		
 	}
@@ -103,7 +100,7 @@ public class ImageReader
 		return pixel & BLUEMASK;
 	}
 
-	//FIXME behövs verkligen denna metod? Den anropas aldrig.
+	//FIXME behövs verkligen denna metod? Den anropas aldrig (ännu).
 	public Set<Point> findEdges() throws IOException
 	{
 		final int distance = 6;
@@ -290,63 +287,29 @@ public class ImageReader
 		List<Color> foundColors = new ArrayList<Color>();
 		
 		Point start = findFirstPixelOfField(fieldType, point);
-		Point end = new Point(start.x, start.y);
 		
 		int y = start.y;
 		int x = start.x;
 		int direction = RIGTH;
 		int searchedPixelsWithNoMatch = 0;
-		int searchArea = calculateSearchAreaSize(start, end);
 		
 		while(searchedPixelsWithNoMatch < 5)
 		{
-			if(searchedPixelsWithNoMatch > 6)
-				throw new IndexOutOfBoundsException("Something has gone wrong here. The search area ("+searchArea+") has become bigger than the error threshold ("+errorThreshold+") which indicates that we are looking outside the field.\n"
-						+ "Last coordinates were x: "+x+" and y "+y+"");
 			Color colorForCurrentPixel = getColor(imageData.getRGB(x, y));
-			Point currentPixel = new Point(x, y);
 			if(hasColor(colorForCurrentPixel, fieldType.getPermittedColors(), fieldType.getThreshold()))
 			{
 				searchedPixelsWithNoMatch = 0;
 				foundColors.add(colorForCurrentPixel);
-				if(x > end.x)
-				{
-					end = new Point(x, y);
-					searchArea = calculateSearchAreaSize(start, end);
-				}
-				if(x < start.x)
-				{
-					start = new Point(x, y);
-					searchArea = calculateSearchAreaSize(start, end);
-				}
 			}
 			else
 			{
-//				if(x < start.x)
-//				{
-//					direction = RIGTH;
-//					y++;
-//				}
-//				else if(x > end.x)
-//				{
-//					direction = LEFT;
-//					y++;
-//				}
 				direction /= -1;
 				y++;
 				searchedPixelsWithNoMatch++;
 			}
 			x += direction;
 		}
-		
-		end = new Point(end.x, y);
-
 		return new Field(fieldType, foundColors);
-	}
-	
-	private int calculateSearchAreaSize(Point start, Point end)
-	{
-		return Math.abs(start.x - end.x)*2 + 25;
 	}
 	
 	private Point findFirstPixelOfField(FieldType fieldType, Point point)
