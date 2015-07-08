@@ -41,9 +41,34 @@ public class ImageReader
 			throw new FileNotFoundException("File " + file + " can not be read");
 		imageData = ImageIO.read(imageFile);
 		whiteBalance = analyzeWhiteBalance();
+		checkBrightness();
 		checkNoiseLevels();
 	}
 	
+	private void checkBrightness()
+	{
+		final int red = whiteBalance.getRed();
+		final int green = whiteBalance.getGreen();
+		final int blue = whiteBalance.getBlue();
+		final int valueOfAllChannels = red + green + blue;
+		
+		final short min = 100;
+		final short max = 200;
+		
+		if(valueOfAllChannels > 3*max)
+			throw new WhiteBalanceException("Image too bright: Value of all color channels combined is over" + 3*max + ": " + valueOfAllChannels);
+		if(valueOfAllChannels < 2*min)
+			throw new WhiteBalanceException("Image too dark: Value of all color channels combined is less than " + 2*min + ": " + valueOfAllChannels);
+		
+		if(red < min || red > max)
+			throw new WhiteBalanceException("Red channel is unbalanced: " + red);
+		if(green < min || green > max)
+			throw new WhiteBalanceException("Green channel is unbalanced: " + green);
+		if(blue < min || blue > max)
+			throw new WhiteBalanceException("Blue channel is unbalanced: " + blue);
+		
+	}
+
 	public ImageReader(BufferedImage bufferedImage) throws IOException
 	{
 		this.imageFile = null;
