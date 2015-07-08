@@ -13,6 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import diacheck.java.libs.imageTools.Field;
+import diacheck.java.libs.imageTools.FieldType;
 
 public class FieldTest
 {
@@ -30,7 +31,7 @@ public class FieldTest
 		pixels.add(first);
 		pixels.add(second);
 		pixels.add(third);
-		this.field = new Field(START, END, pixels);
+		this.field = new Field(FieldType.PROTEIN, new ArrayList<Color>());
 	}
 
 	@Test

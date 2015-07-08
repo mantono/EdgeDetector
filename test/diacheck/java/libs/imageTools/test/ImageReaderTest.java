@@ -135,10 +135,11 @@ public class ImageReaderTest
 		final File input = new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped.png");
 		assertTrue("Can't read file " + input, input.canRead());
 		ImageReader image = new ImageReader(input);
-		Field whiteBalanceField = image.locateField(FieldType.WHITE_BALANCE, 0.1948, 0.6611);
+		Field whiteBalanceField = image.locateField(FieldType.WHITE_BALANCE);
 		
 		assertTrue(whiteBalanceField != null);
 		assertTrue(whiteBalanceField.getAmountOfPixels() > 0);
+		assertEquals(new Color(154, 154, 154), whiteBalanceField.getAverageColor());
 	}
 
 }

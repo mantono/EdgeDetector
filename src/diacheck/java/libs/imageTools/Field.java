@@ -19,13 +19,14 @@ public class Field
 	{
 		this.pixels = pixels;
 		this.fieldtype = type;
+		if(pixels.size() == 0)
+			throw new IllegalArgumentException("The amount of pixels must be at least one!");
 	}
 	
 	@SuppressWarnings("unchecked")
 	public Field(FieldType type, final Color[] pixels)
 	{
-		this.pixels = (List<Color>) Arrays.asList(pixels);
-		this.fieldtype = type;
+		this(type, (List<Color>) Arrays.asList(pixels));
 	}
 	
 	public int getAmountOfPixels()

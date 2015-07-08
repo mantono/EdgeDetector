@@ -31,7 +31,6 @@ public class ImageReader
 	private final Color whiteBalance;
 	private final BufferedImage imageData;
 	private final int errorThreshold;
-	private final Set<Point> checkedPixels = new HashSet<Point>();;
 	private Point leftControlField;
 	private Point rightControlField;
 	private Point bottomControlField;
@@ -42,7 +41,7 @@ public class ImageReader
 		if(!file.canRead())
 			throw new FileNotFoundException("File " + file + " can not be read");
 		imageData = ImageIO.read(imageFile);
-		this.errorThreshold = (int) ((imageData.getHeight() * imageData.getWidth())*0.05);
+		this.errorThreshold = (int) ((imageData.getHeight()* 0.05 * imageData.getWidth())* 0.05);
 		whiteBalance = analyzeWhiteBalance();
 		checkNoiseLevels();
 	}
@@ -66,55 +65,8 @@ public class ImageReader
 
 	private Color analyzeWhiteBalance() throws IOException
 	{
-		Color[] whiteBalanceSamples = collectWhiteBalanceData();
-		Field whiteBalance = new Field(FieldType.WHITE_BALANCE, whiteBalanceSamples);
+		Field whiteBalance = locateField(FieldType.WHITE_BALANCE);
 		return whiteBalance.getAverageColor();
-	}
-
-	private Color[] collectWhiteBalanceData() throws IOException
-	{
-		return pickColorSamples(new Point(429, 428), new Point(443, 442));
-	}
-
-	private Color[] pickColorSamples(Point start, Point end) throws IOException
-	{
-		final int size = calculateSampleSize(start, end);
-		Color[] samples = new Color[size];
-		imageData.getRGB(1, 1);
-
-		int xStart, xStop, yStart, yStop;
-		if(start.x < end.x)
-		{
-			xStart = start.x;
-			xStop = end.x;
-		}
-		else
-		{
-			xStart = end.x;
-			xStop = start.x;
-		}
-		if(start.y < end.y)
-		{
-			yStart = start.y;
-			yStop = end.y;
-		}
-		else
-		{
-			yStart = end.y;
-			yStop = start.y;
-		}
-
-		int sizeCount = 0;
-		for(int y = yStart; y < yStop; y += 5)
-		{
-			for(int x = xStart; x < xStop; x += 5)
-			{
-				int pixel = imageData.getRGB(x, y);
-				assert sizeCount < size : "Going out of bounds with " + x + " and " + y;
-				samples[sizeCount++] = getColor(pixel);
-			}
-		}
-		return samples;
 	}
 
 	private Color getColor(int pixel)
@@ -262,7 +214,6 @@ public class ImageReader
 	
 	public Point[] findControlFields()
 	{
-		checkedPixels.clear();
 		final Point[] controlFieldPositions = new Point[3];
 		List<Point> pixelsFromFields = findRandomPixelInEachField(3, FieldType.CONTROL.getColor());
 		controlFieldPositions[0] = findFirstPixelOfField(FieldType.CONTROL, pixelsFromFields.get(0)); 
@@ -273,8 +224,8 @@ public class ImageReader
 
 	public List<Point> findRandomPixelInEachField(int numberOfFields, Color fieldColor)
 	{
-		checkedPixels.clear();
-		List<Point> controlFields = new ArrayList<Point>(numberOfFields);
+		Set<Point> checkedPixels = new HashSet<Point>();
+		List<Point> fields = new ArrayList<Point>(numberOfFields);
 		
 		final int width = imageData.getWidth();
 		final int height = imageData.getHeight();
@@ -287,7 +238,7 @@ public class ImageReader
 		
 		//TODO gör om denna för concurrent?
 		
-		while(controlFields.size() < numberOfFields && checkedPixels.size() < imageResolution)
+		while(fields.size() < numberOfFields && checkedPixels.size() < imageResolution)
 		{
 			Point currentPixel = new Point(x, y);
 			checkedPixels.add(currentPixel);
@@ -295,11 +246,11 @@ public class ImageReader
 			if(hasColor(pixelColor, fieldColor, 25))
 			{
 				boolean pixelBelongsToAlreadyFoundField = false;
-				for(Point pixel : controlFields)
+				for(Point pixel : fields)
 					if(Point.distance(currentPixel.x, currentPixel.y, pixel.x, pixel.y) < expectedFieldSize)
 						pixelBelongsToAlreadyFoundField = true;
 				if(!pixelBelongsToAlreadyFoundField)
-					controlFields.add(currentPixel);
+					fields.add(currentPixel);
 			}
 			
 			x += increment;
@@ -315,12 +266,23 @@ public class ImageReader
 			}
 		}
 		
-		return controlFields;
+		return fields;
 	}
 	
 	public Field locateField(FieldType fieldType, double distanceRatioX, double distanceRatioY)
 	{
-		return new Field(fieldType, new ArrayList<Color>());
+		final int x = (int) (imageData.getWidth()*distanceRatioX);
+		final int y = (int) (imageData.getHeight()*distanceRatioY);
+		final Point fieldCenter = new Point(x, y);
+		return findRestOfField(fieldType, fieldCenter);
+	}
+	
+	public Field locateField(FieldType fieldType)
+	{
+		final int x = fieldType.getX(imageData.getWidth());
+		final int y = fieldType.getY(imageData.getHeight());
+		final Point fieldCenter = new Point(x, y);
+		return findRestOfField(fieldType, fieldCenter);
 	}
 	
 	private Field findRestOfField(FieldType fieldType, Point point)
@@ -336,13 +298,14 @@ public class ImageReader
 		int searchedPixelsWithNoMatch = 0;
 		int searchArea = calculateSearchAreaSize(start, end);
 		
-		while(searchedPixelsWithNoMatch < searchArea)
+		while(searchedPixelsWithNoMatch < 5)
 		{
+			if(searchedPixelsWithNoMatch > 6)
+				throw new IndexOutOfBoundsException("Something has gone wrong here. The search area ("+searchArea+") has become bigger than the error threshold ("+errorThreshold+") which indicates that we are looking outside the field.\n"
+						+ "Last coordinates were x: "+x+" and y "+y+"");
 			Color colorForCurrentPixel = getColor(imageData.getRGB(x, y));
 			Point currentPixel = new Point(x, y);
-			if(checkedPixels.contains(currentPixel))
-				searchedPixelsWithNoMatch = 0;
-			else if(hasColor(colorForCurrentPixel, fieldType.getPermittedColors(), fieldType.getThreshold()))
+			if(hasColor(colorForCurrentPixel, fieldType.getPermittedColors(), fieldType.getThreshold()))
 			{
 				searchedPixelsWithNoMatch = 0;
 				foundColors.add(colorForCurrentPixel);
@@ -359,19 +322,20 @@ public class ImageReader
 			}
 			else
 			{
-				if(x < start.x)
-				{
-					direction = RIGTH;
-					y++;
-				}
-				else if(x > end.x)
-				{
-					direction = LEFT;
-					y++;
-				}
+//				if(x < start.x)
+//				{
+//					direction = RIGTH;
+//					y++;
+//				}
+//				else if(x > end.x)
+//				{
+//					direction = LEFT;
+//					y++;
+//				}
+				direction /= -1;
+				y++;
 				searchedPixelsWithNoMatch++;
 			}
-			checkedPixels.add(currentPixel);
 			x += direction;
 		}
 		

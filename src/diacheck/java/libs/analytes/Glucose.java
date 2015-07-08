@@ -4,6 +4,9 @@ import diacheck.java.libs.imageTools.Field;
 
 public class Glucose implements Analyte
 {
+	public final static double FIELD_ANGLE = 40;
+	public final static int DISTANCE = 1200;
+	
 	private final Field colorData;
 	
 	Glucose(final Field data)
