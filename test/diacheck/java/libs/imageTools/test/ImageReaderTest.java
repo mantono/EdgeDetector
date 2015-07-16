@@ -58,17 +58,43 @@ public class ImageReaderTest
 	}
 	
 	@Test
+	public void testFindFirstPixelOfFieldForWhiteBalance() throws IOException
+	{
+		final File input = new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped_with_increased_brightness_and_contrast.png");
+		assertTrue("Can't read file " + input, input.canRead());
+		ImageReader image = new ImageReader(input);
+		final Point foundPixel = image.findFirstPixelOfField(FieldType.WHITE_BALANCE);
+		assertEquals(new Point(498, 862), foundPixel);
+	}
+	
+	@Test
 	public void testFindEdges() throws IOException
 	{
-		final File input = new File(IMAGE_PATH + "flash_sharp1_with_fake_grey_area.png");
+		final File input = new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped.png");
 		assertTrue("Can't read file " + input, input.canRead());
 		ImageReader image = new ImageReader(input);
 		
-		final Point edgePixel = new Point(423, 1450);
 		Set<Point> edges = image.findEdges();
-		assertTrue(edges.contains(edgePixel));
+		assertTrue(edges.contains(new Point(1419, 1286)));
+		assertTrue(edges.contains(new Point(1177, 720)));
+		assertTrue(edges.contains(new Point(1166, 711)));
 		
-		makeEdgesBlue(new File(IMAGE_PATH + "flash_sharp1_with_fake_grey_area.png"), edges);
+		makeEdgesBlue(new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped.png"), edges);
+	}
+	
+	@Test
+	public void testFindEdgesOnBrightImageWithHighContrast() throws IOException
+	{
+		final File input = new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped_with_increased_brightness_and_contrast.png");
+		assertTrue("Can't read file " + input, input.canRead());
+		ImageReader image = new ImageReader(input);
+		
+		Set<Point> edges = image.findEdges();
+		assertTrue(edges.contains(new Point(1419, 1286)));
+		assertTrue(edges.contains(new Point(1177, 720)));
+		assertTrue(edges.contains(new Point(1166, 711)));
+		
+		makeEdgesBlue(new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped_with_increased_brightness_and_contrast.png"), edges);
 	}
 	
 	private void makeEdgesBlue(File image, Set<Point> edges) throws IOException
@@ -130,7 +156,7 @@ public class ImageReaderTest
 	}
 	
 	@Test
-	public void testLocateField() throws IOException
+	public void testLocateWhiteBalanceField() throws IOException
 	{
 		final File input = new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped.png");
 		assertTrue("Can't read file " + input, input.canRead());
@@ -139,7 +165,7 @@ public class ImageReaderTest
 		
 		assertTrue(whiteBalanceField != null);
 		assertTrue(whiteBalanceField.getAmountOfPixels() > 0);
-		assertEquals(new Color(154, 154, 154), whiteBalanceField.getAverageColor());
+		assertEquals(new Color(146, 146, 146), whiteBalanceField.getAverageColor());
 	}
 
 }

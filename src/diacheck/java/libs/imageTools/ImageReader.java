@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.channels.IllegalSelectorException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -45,6 +46,14 @@ public class ImageReader
 		checkNoiseLevels();
 	}
 	
+	public ImageReader(BufferedImage bufferedImage) throws IOException
+	{
+		this.imageFile = null;
+		this.imageData = bufferedImage;
+		whiteBalance = analyzeWhiteBalance();
+		checkNoiseLevels();
+	}
+	
 	private void checkBrightness()
 	{
 		final int red = whiteBalance.getRed();
@@ -52,8 +61,8 @@ public class ImageReader
 		final int blue = whiteBalance.getBlue();
 		final int valueOfAllChannels = red + green + blue;
 		
-		final short min = 100;
-		final short max = 200;
+		final short min = 120;
+		final short max = 230;
 		
 		if(valueOfAllChannels > 3*max)
 			throw new WhiteBalanceException("Image too bright: Value of all color channels combined is over" + 3*max + ": " + valueOfAllChannels);
@@ -69,14 +78,6 @@ public class ImageReader
 		
 	}
 
-	public ImageReader(BufferedImage bufferedImage) throws IOException
-	{
-		this.imageFile = null;
-		this.imageData = bufferedImage;
-		whiteBalance = analyzeWhiteBalance();
-		checkNoiseLevels();		
-	}
-
 	private void checkNoiseLevels()
 	{
 		if(whiteBalance.getRed() - whiteBalance.getBlue() > 25)
@@ -87,8 +88,15 @@ public class ImageReader
 
 	private Color analyzeWhiteBalance() throws IOException
 	{
-		Field whiteBalance = locateField(FieldType.WHITE_BALANCE);
-		return whiteBalance.getAverageColor();
+		try
+		{
+			Field whiteBalance = locateField(FieldType.WHITE_BALANCE);
+			return whiteBalance.getAverageColor();
+		}
+		catch(IllegalArgumentException exception)
+		{
+			throw new WhiteBalanceException("Could not find white balance field. This can be because of bad color balance in image");
+		}
 	}
 
 	private Color getColor(int pixel)
@@ -125,7 +133,6 @@ public class ImageReader
 		return pixel & BLUEMASK;
 	}
 
-	//FIXME behövs verkligen denna metod? Den anropas aldrig (ännu).
 	public Set<Point> findEdges() throws IOException
 	{
 		final int distance = 6;
@@ -165,7 +172,7 @@ public class ImageReader
 
 	public static boolean isEdge(int pixel1, int pixel2)
 	{
-		final int threshold = 45;
+		final int threshold = 35;
 		final int diffRed = Math.abs(getRed(pixel1) - getRed(pixel2));
 		if(diffRed > threshold)
 			return true;
@@ -291,14 +298,6 @@ public class ImageReader
 		return fields;
 	}
 	
-	public Field locateField(FieldType fieldType, double distanceRatioX, double distanceRatioY)
-	{
-		final int x = (int) (imageData.getWidth()*distanceRatioX);
-		final int y = (int) (imageData.getHeight()*distanceRatioY);
-		final Point fieldCenter = new Point(x, y);
-		return findRestOfField(fieldType, fieldCenter);
-	}
-	
 	public Field locateField(FieldType fieldType)
 	{
 		final int x = fieldType.getX(imageData.getWidth());
@@ -317,9 +316,10 @@ public class ImageReader
 		int x = start.x;
 		int direction = RIGTH;
 		int searchedPixelsWithNoMatch = 0;
-		
-		while(searchedPixelsWithNoMatch < 5)
-		{
+		int consecutiveEdgePixelsFound = 0;
+	
+		while(searchedPixelsWithNoMatch < 5 && consecutiveEdgePixelsFound < 4)
+		{		
 			Color colorForCurrentPixel = getColor(imageData.getRGB(x, y));
 			if(hasColor(colorForCurrentPixel, fieldType.getPermittedColors(), fieldType.getThreshold()))
 			{
@@ -337,7 +337,15 @@ public class ImageReader
 		return new Field(fieldType, foundColors);
 	}
 	
-	private Point findFirstPixelOfField(FieldType fieldType, Point point)
+	public Point findFirstPixelOfField(FieldType fieldType)
+	{
+		final int x = fieldType.getX(imageData.getWidth());
+		final int y = fieldType.getY(imageData.getHeight());
+		final Point fieldCenter = new Point(x, y);
+		return  findFirstPixelOfField(fieldType, fieldCenter);
+	}
+	
+	public Point findFirstPixelOfField(FieldType fieldType, Point point)
 	{
 		Point current = point;
 		Point left = new Point(current.x-1, current.y);
@@ -346,7 +354,7 @@ public class ImageReader
 		Color leftColor = getColor(imageData.getRGB(left.x, left.y));
 		Color upColor = getColor(imageData.getRGB(up.x, up.y));
 		
-		final byte colorThreshold = fieldType.getThreshold();
+		final short colorThreshold = fieldType.getThreshold();
 		
 		while(hasColor(leftColor, fieldType.getPermittedColors(), colorThreshold) || hasColor(upColor, fieldType.getPermittedColors(), colorThreshold))
 		{
@@ -355,13 +363,21 @@ public class ImageReader
 			else
 				current = up;
 			
+			if(hasReachedEdgeOfImage(current))
+				throw new IllegalStateException("Reached end of image when looking for first pixel of field for " + fieldType);
+			
 			left = new Point(current.x-1, current.y);
 			up = new Point(current.x, current.y-1);
 			leftColor = getColor(imageData.getRGB(left.x, left.y));
 			upColor = getColor(imageData.getRGB(up.x, up.y));
 		}
-
+		
 		return current;
+	}
+
+	private boolean hasReachedEdgeOfImage(Point current)
+	{
+		return current.x == 0 || current.y == 0;
 	}
 
 	public static boolean hasColor(Color matchingColor, Color fieldColor, int threshold)
@@ -381,7 +397,7 @@ public class ImageReader
 		return true;
 	}
 	
-	public static boolean hasColor(Color matchingColor, Color[] fieldColors, int threshold)
+	public static boolean hasColor(Color matchingColor, Set<Color> fieldColors, int threshold)
 	{
 		for(Color color : fieldColors)
 		{
