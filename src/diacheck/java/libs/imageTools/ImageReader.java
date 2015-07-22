@@ -6,15 +6,10 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.channels.IllegalSelectorException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
-
-import diacheck.java.libs.Triangle;
 
 /**
  * 
@@ -26,14 +21,10 @@ public class ImageReader
 	public final static int REDMASK = 0xff0000;
 	public final static int GREENMASK = 0x00ff00;
 	public final static int BLUEMASK = 0x0000ff;
-	public final static int RIGTH = 1;
-	public final static int LEFT = -1;
 	private final File imageFile;
 	private final Color whiteBalance;
 	private final BufferedImage imageData;
-	private Point leftControlField;
-	private Point rightControlField;
-	private Point bottomControlField;
+	private final FieldFinder fields;
 
 	public ImageReader(File file) throws IOException
 	{
@@ -41,6 +32,7 @@ public class ImageReader
 		if(!file.canRead())
 			throw new FileNotFoundException("File " + file + " can not be read");
 		imageData = ImageIO.read(imageFile);
+		fields = new FieldFinder(imageData);
 		whiteBalance = analyzeWhiteBalance();
 		checkBrightness();
 		checkNoiseLevels();
@@ -50,6 +42,7 @@ public class ImageReader
 	{
 		this.imageFile = null;
 		this.imageData = bufferedImage;
+		fields = new FieldFinder(imageData);
 		whiteBalance = analyzeWhiteBalance();
 		checkNoiseLevels();
 	}
@@ -90,7 +83,7 @@ public class ImageReader
 	{
 		try
 		{
-			Field whiteBalance = locateField(FieldType.WHITE_BALANCE);
+			Field whiteBalance = fields.locateField(FieldType.WHITE_BALANCE);
 			return whiteBalance.getAverageColor();
 		}
 		catch(IllegalArgumentException exception)
@@ -99,16 +92,9 @@ public class ImageReader
 		}
 	}
 
-	private Color getColor(int pixel)
+	public static Color getColor(int pixel)
 	{
 		return new Color(getRed(pixel), getGreen(pixel), getBlue(pixel));
-	}
-
-	public static int calculateSampleSize(Point start, Point end)
-	{
-		int x = 1 + Math.abs(start.x - end.x) / 5;
-		int y = 1 + Math.abs(start.y - end.y) / 5;
-		return x * y;
 	}
 
 	private Color whiteBalanceCompensation(Color averageColor)
@@ -197,229 +183,5 @@ public class ImageReader
 		final String[] filenameSplitted = filename.split("\\.");
 		final int fileTypePosition = filenameSplitted.length - 1;
 		return filenameSplitted[fileTypePosition].toLowerCase();
-	}
-	
-	public double readAligment()
-	{
-		final Point[] controlFields = findControlFields();
-		setControlFieldPositions(controlFields);
-		Triangle triangle = new Triangle(leftControlField, rightControlField);
-		return triangle.getBottomLeftAngle();
-	}
-	
-	private void setControlFieldPositions(Point[] controlFields)
-	{
-		leftControlField = getTopLeftControlField(controlFields);
-		rightControlField = getTopRightControlField(controlFields);
-		bottomControlField = getBottomControlField(controlFields);		
-	}
-
-	private Point getBottomControlField(Point[] fields)
-	{
-		if(fields[0].y > fields[1].y && fields[0].y > fields[2].y)
-			return fields[0];
-		if(fields[1].y > fields[0].y && fields[1].y > fields[2].y)
-			return fields[1];
-		return fields[2];
-	}
-
-	private Point getTopRightControlField(Point[] fields)
-	{
-		if(fields[0].x > fields[1].x && fields[0].x > fields[2].x)
-			return fields[0];
-		if(fields[1].x > fields[0].x && fields[1].x > fields[2].x)
-			return fields[1];
-		return fields[2];
-	}
-
-	private Point getTopLeftControlField(Point[] fields)
-	{
-		if(fields[0].x < fields[1].x && fields[0].x < fields[2].x)
-			return fields[0];
-		if(fields[1].x < fields[0].x && fields[1].x < fields[2].x)
-			return fields[1];
-		return fields[2];
-	}
-	
-	public Point[] findControlFields()
-	{
-		final Point[] controlFieldPositions = new Point[3];
-		List<Point> pixelsFromFields = findRandomPixelInEachField(3, FieldType.CONTROL.getColor());
-		controlFieldPositions[0] = findFirstPixelOfField(FieldType.CONTROL, pixelsFromFields.get(0)); 
-		controlFieldPositions[1] = findFirstPixelOfField(FieldType.CONTROL, pixelsFromFields.get(1));
-		controlFieldPositions[2] = findFirstPixelOfField(FieldType.CONTROL, pixelsFromFields.get(2));
-		return controlFieldPositions;
-	}
-
-	public List<Point> findRandomPixelInEachField(int numberOfFields, Color fieldColor)
-	{
-		Set<Point> checkedPixels = new HashSet<Point>();
-		List<Point> fields = new ArrayList<Point>(numberOfFields);
-		
-		final int width = imageData.getWidth();
-		final int height = imageData.getHeight();
-		final int imageResolution = width*height;
-		final int expectedFieldSize = imageResolution/50000;
-		
-		int x = 0;
-		int y = 0;
-		int increment = imageResolution/500;
-		
-		//TODO gör om denna för concurrent?
-		
-		while(fields.size() < numberOfFields && checkedPixels.size() < imageResolution)
-		{
-			Point currentPixel = new Point(x, y);
-			checkedPixels.add(currentPixel);
-			Color pixelColor = getColor(imageData.getRGB(x, y));
-			if(hasColor(pixelColor, fieldColor, 25))
-			{
-				boolean pixelBelongsToAlreadyFoundField = false;
-				for(Point pixel : fields)
-					if(Point.distance(currentPixel.x, currentPixel.y, pixel.x, pixel.y) < expectedFieldSize)
-						pixelBelongsToAlreadyFoundField = true;
-				if(!pixelBelongsToAlreadyFoundField)
-					fields.add(currentPixel);
-			}
-			
-			x += increment;
-			if(x >= width)
-			{
-				x %= width;
-				y++;
-			}
-			if(y >= height)
-			{
-				y = 0;
-				increment--;
-			}
-		}
-		
-		return fields;
-	}
-	
-	public Field locateField(FieldType fieldType)
-	{
-		final int x = fieldType.getX(imageData.getWidth());
-		final int y = fieldType.getY(imageData.getHeight());
-		final Point fieldCenter = new Point(x, y);
-		return findRestOfField(fieldType, fieldCenter);
-	}
-	
-	private Field findRestOfField(FieldType fieldType, Point point)
-	{
-		List<Color> foundColors = new ArrayList<Color>();
-		
-		Point start = findFirstPixelOfField(fieldType, point);
-		
-		int y = start.y;
-		int x = start.x;
-		int direction = RIGTH;
-		int searchedPixelsWithNoMatch = 0;
-		int consecutiveEdgePixelsFound = 0;
-	
-		while(searchedPixelsWithNoMatch < 5 && consecutiveEdgePixelsFound < 4)
-		{		
-			Color colorForCurrentPixel = getColor(imageData.getRGB(x, y));
-			if(hasColor(colorForCurrentPixel, fieldType.getPermittedColors(), fieldType.getThreshold()))
-			{
-				searchedPixelsWithNoMatch = 0;
-				foundColors.add(colorForCurrentPixel);
-			}
-			else
-			{
-				direction /= -1;
-				y++;
-				searchedPixelsWithNoMatch++;
-			}
-			x += direction;
-		}
-		return new Field(fieldType, foundColors);
-	}
-	
-	public Point findFirstPixelOfField(FieldType fieldType)
-	{
-		final int x = fieldType.getX(imageData.getWidth());
-		final int y = fieldType.getY(imageData.getHeight());
-		final Point fieldCenter = new Point(x, y);
-		return  findFirstPixelOfField(fieldType, fieldCenter);
-	}
-	
-	public Point findFirstPixelOfField(FieldType fieldType, Point point)
-	{
-		Point current = point;
-		Point left = new Point(current.x-1, current.y);
-		Point up = new Point(current.x, current.y-1);
-		
-		Color leftColor = getColor(imageData.getRGB(left.x, left.y));
-		Color upColor = getColor(imageData.getRGB(up.x, up.y));
-		
-		final short colorThreshold = fieldType.getThreshold();
-		
-		while(hasColor(leftColor, fieldType.getPermittedColors(), colorThreshold) || hasColor(upColor, fieldType.getPermittedColors(), colorThreshold))
-		{
-			if(hasColor(leftColor, fieldType.getPermittedColors(), colorThreshold))
-				current = left;
-			else
-				current = up;
-			
-			if(hasReachedEdgeOfImage(current))
-				throw new IllegalStateException("Reached end of image when looking for first pixel of field for " + fieldType);
-			
-			left = new Point(current.x-1, current.y);
-			up = new Point(current.x, current.y-1);
-			leftColor = getColor(imageData.getRGB(left.x, left.y));
-			upColor = getColor(imageData.getRGB(up.x, up.y));
-		}
-		
-		return current;
-	}
-
-	private boolean hasReachedEdgeOfImage(Point current)
-	{
-		return current.x == 0 || current.y == 0;
-	}
-
-	public static boolean hasColor(Color matchingColor, Color fieldColor, int threshold)
-	{
-		final int diffRed = Math.abs(matchingColor.getRed() - fieldColor.getRed());
-		if(diffRed > threshold)
-			return false;
-		
-		final int diffGreen = Math.abs(matchingColor.getGreen() - fieldColor.getGreen());;
-		if(diffGreen > threshold)
-			return false;
-		
-		final int diffBlue = Math.abs(matchingColor.getBlue() - fieldColor.getBlue());;
-		if(diffBlue > threshold)
-			return false;
-		
-		return true;
-	}
-	
-	public static boolean hasColor(Color matchingColor, Set<Color> fieldColors, int threshold)
-	{
-		for(Color color : fieldColors)
-		{
-			if(hasColor(matchingColor, color, threshold))
-				return true;
-		}
-		
-		return false;
-	}
-
-	public Point getLeftControlField()
-	{
-		return leftControlField;
-	}
-	
-	public Point getRightControlField()
-	{
-		return rightControlField;
-	}
-	
-	public Point getBottomControlField()
-	{
-		return bottomControlField;
 	}
 }

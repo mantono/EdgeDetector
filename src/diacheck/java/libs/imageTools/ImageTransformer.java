@@ -37,7 +37,7 @@ public class ImageTransformer
 
 	public void removePixelsOutsideControlFields() throws IOException
 	{
-		ImageReader reader = new ImageReader(imageData);
+		ControlFieldReader reader = new ControlFieldReader(imageData);
 		reader.readAligment();
 		
 		Point start = reader.getLeftControlField();
