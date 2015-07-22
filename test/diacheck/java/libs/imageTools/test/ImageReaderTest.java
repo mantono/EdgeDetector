@@ -44,57 +44,22 @@ public class ImageReaderTest
 	}
 
 	@Test
-	public void testCalculateSampleSizeTest()
-	{
-		Point start = new Point(0, 0);
-		Point end = new Point(50, 50);
-		int size = ImageReader.calculateSampleSize(start, end);
-		assertEquals(121, size);
-
-		start = new Point(100, 100);
-		end = new Point(120, 120);
-		size = ImageReader.calculateSampleSize(start, end);
-		assertEquals(25, size);
-	}
-	
-	@Test
-	public void testFindFirstPixelOfFieldForWhiteBalance() throws IOException
-	{
-		final File input = new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped_with_increased_brightness_and_contrast.png");
-		assertTrue("Can't read file " + input, input.canRead());
-		ImageReader image = new ImageReader(input);
-		final Point foundPixel = image.findFirstPixelOfField(FieldType.WHITE_BALANCE);
-		assertEquals(new Point(498, 862), foundPixel);
-	}
-	
-	@Test
 	public void testFindEdges() throws IOException
 	{
-		final File input = new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped.png");
+		final File input = new File(IMAGE_PATH + "GOOD_horizontal_and_cropped.png");
 		assertTrue("Can't read file " + input, input.canRead());
 		ImageReader image = new ImageReader(input);
 		
 		Set<Point> edges = image.findEdges();
-		assertTrue(edges.contains(new Point(1419, 1286)));
-		assertTrue(edges.contains(new Point(1177, 720)));
-		assertTrue(edges.contains(new Point(1166, 711)));
+		makeEdgesBlue(input, edges);
 		
-		makeEdgesBlue(new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped.png"), edges);
-	}
-	
-	@Test
-	public void testFindEdgesOnBrightImageWithHighContrast() throws IOException
-	{
-		final File input = new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped_with_increased_brightness_and_contrast.png");
-		assertTrue("Can't read file " + input, input.canRead());
-		ImageReader image = new ImageReader(input);
-		
-		Set<Point> edges = image.findEdges();
-		assertTrue(edges.contains(new Point(1419, 1286)));
-		assertTrue(edges.contains(new Point(1177, 720)));
-		assertTrue(edges.contains(new Point(1166, 711)));
-		
-		makeEdgesBlue(new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped_with_increased_brightness_and_contrast.png"), edges);
+		assertTrue(edges.contains(new Point(1518, 895)));
+		assertTrue(edges.contains(new Point(1549, 932)));
+		assertTrue(edges.contains(new Point(1301, 707)));
+		assertTrue(edges.contains(new Point(1964, 580)));
+		assertFalse(edges.contains(new Point(1537, 912)));
+		assertFalse(edges.contains(new Point(1498, 653)));
+		assertFalse(edges.contains(new Point(1891, 644)));
 	}
 	
 	private void makeEdgesBlue(File image, Set<Point> edges) throws IOException
@@ -129,24 +94,6 @@ public class ImageReaderTest
 	}
 	
 	@Test
-	public void testFindAllControlFields() throws IOException
-	{
-		final File input = new File(IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
-		ImageReader image = new ImageReader(input);
-		List<Point> pixelsInControlFields = image.findRandomPixelInEachField(3, FieldType.CONTROL.getColor());
-		assertEquals(3, pixelsInControlFields.size());
-		
-	}
-	
-	@Test
-	public void readAligment() throws IOException
-	{
-		final File input = new File(IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
-		ImageReader image = new ImageReader(input);
-		assertEquals(0.1884033450, image.readAligment(), 0.01);
-	}
-	
-	@Test
 	public void testCheckFiletype()
 	{
 		File file = new File("/home/test/long/path/with.dots/test.jpg");
@@ -154,18 +101,4 @@ public class ImageReaderTest
 		file = new File("TEST.PNG");
 		assertEquals("png", ImageReader.fileType(file));
 	}
-	
-	@Test
-	public void testLocateWhiteBalanceField() throws IOException
-	{
-		final File input = new File(IMAGE_PATH + "flash_sharp2_with_no_rotation_and_fake_control_fields_cropped.png");
-		assertTrue("Can't read file " + input, input.canRead());
-		ImageReader image = new ImageReader(input);
-		Field whiteBalanceField = image.locateField(FieldType.WHITE_BALANCE);
-		
-		assertTrue(whiteBalanceField != null);
-		assertTrue(whiteBalanceField.getAmountOfPixels() > 0);
-		assertEquals(new Color(146, 146, 146), whiteBalanceField.getAverageColor());
-	}
-
 }

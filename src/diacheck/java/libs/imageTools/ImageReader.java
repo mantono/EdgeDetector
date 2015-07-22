@@ -121,7 +121,7 @@ public class ImageReader
 
 	public Set<Point> findEdges() throws IOException
 	{
-		final int distance = 6;
+		final int distance = 4;
 		Set<Point> edges = new HashSet<Point>();
 
 		for(int y = distance; y < imageData.getHeight(); y += 2)

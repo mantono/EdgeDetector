@@ -17,7 +17,7 @@ public enum FieldType
 	CONTROL(25, 0.5, 0.5, new Color(151, 255, 0)),
 	GLUCOSE(20, 0.75075, 0.49887, new Color(150, 137, 56), new Color(149, 135, 62), new Color(158, 144, 55)),
 	KETONES(35, 0.9708214, 0.049887, new Color(254, 250, 202), new Color(254, 221, 188), new Color(223, 179, 196), new Color(177, 87, 141), new Color(81, 0, 77)),
-	PH(5, 0.5, 0.5, new Color(90, 90, 90)),
+	PH(25, 0.67251, 0.484962, new Color(169, 91, 43)),
 	PROTEIN(5, 0.5, 0.5, new Color(90, 90, 90)),
 	SPECIFIC_GRAVITY(5, 0.5, 0.5, new Color(90, 90, 90));
 

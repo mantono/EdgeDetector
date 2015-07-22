@@ -31,19 +31,7 @@ public class FieldTest
 		pixels.add(first);
 		pixels.add(second);
 		pixels.add(third);
-		this.field = new Field(FieldType.PROTEIN, new ArrayList<Color>());
-	}
-
-	@Test
-	public void testFieldPointPointSetOfColor()
-	{
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testFieldPointPoint()
-	{
-		fail("Not yet implemented");
+		this.field = new Field(FieldType.PROTEIN, pixels);
 	}
 
 	@Test

@@ -3,13 +3,17 @@ package diacheck.java.libs.imageTools.test;
 import static org.junit.Assert.*;
 
 import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+
+import javax.imageio.ImageIO;
 
 import org.fest.util.Files;
 import org.junit.Before;
 import org.junit.Test;
 
+import diacheck.java.libs.imageTools.ControlFieldReader;
 import diacheck.java.libs.imageTools.ImageReader;
 import diacheck.java.libs.imageTools.ImageTransformer;
 
@@ -40,7 +44,7 @@ public class ImageTransformerTest
 			if(output.canRead())
 				Files.delete(output);
 			assertFalse(output.canRead());
-			ImageReader image = new ImageReader(input);
+			ControlFieldReader image = new ControlFieldReader(ImageIO.read(input));
 			double requiredRotation = image.readAligment();
 			ImageTransformer imageTransformed = new ImageTransformer(input);
 			Point startOfFirstControlField = image.getLeftControlField();
@@ -63,7 +67,7 @@ public class ImageTransformerTest
 		{
 			input = new File(IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
 			output = new File(IMAGE_OUTPUT_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.png");
-			ImageReader image = new ImageReader(input);
+			ControlFieldReader image = new ControlFieldReader(ImageIO.read(input));
 			double requiredRotation = image.readAligment();
 			ImageTransformer imageTransformed = new ImageTransformer(input);
 			Point startOfFirstControlField = image.getLeftControlField();
