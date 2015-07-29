@@ -3,6 +3,7 @@ package diacheck.java.libs.imageTools;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -15,13 +16,33 @@ import diacheck.java.libs.imageTools.ImageReader;
 public class FieldFinder
 {
 	private final BufferedImage imageData;
+	private final Color whiteBalance;
 	public final static int RIGTH = 1;
 	public final static int LEFT = -1;
 	
 	public FieldFinder(BufferedImage image)
 	{
 		this.imageData = image;
+		this.whiteBalance = analyzeWhiteBalance();
 	}
+	
+	private Color analyzeWhiteBalance()
+	{
+		try
+		{
+			return locateField(FieldType.WHITE_BALANCE).getAverageColor();
+		}
+		catch(IllegalArgumentException exception)
+		{
+			throw new WhiteBalanceException("Could not find white balance field. This can be because of bad color balance in image");
+		}
+	}
+	
+	public Color getWhiteBalance()
+	{
+		return whiteBalance;
+	}
+	
 	public Field locateField(FieldType fieldType)
 	{
 		final int x = fieldType.getX(imageData.getWidth());
@@ -57,9 +78,25 @@ public class FieldFinder
 			}
 			x += direction;
 		}
+		foundColors = whiteBalanceCompensation(foundColors);
 		return new Field(fieldType, foundColors);
 	}
 	
+	public List<Color> whiteBalanceCompensation(List<Color> foundColors)
+	{
+		List<Color> newColors = new ArrayList<Color>(foundColors.size());
+		for(Color color : foundColors)
+			newColors.add(whiteBalanceCompensation(color));
+		return newColors;
+	}
+	
+	public Color whiteBalanceCompensation(Color averageColor)
+	{
+		final int redGreenDiff = whiteBalance.getGreen() - whiteBalance.getRed();
+		final int blueGreenDiff = whiteBalance.getGreen() - whiteBalance.getBlue();
+		return new Color(averageColor.getRed() + redGreenDiff, averageColor.getGreen(), averageColor.getBlue() + blueGreenDiff);
+	}
+
 	public Point findFirstPixelOfField(FieldType fieldType)
 	{
 		final int x = fieldType.getX(imageData.getWidth());

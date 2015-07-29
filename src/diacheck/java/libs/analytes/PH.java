@@ -1,7 +1,15 @@
 package diacheck.java.libs.analytes;
 
+import diacheck.java.libs.imageTools.Field;
+
 public class PH implements Analyte
 {
+	private final Field colorData;
+
+	public PH(final Field data)
+	{
+		this.colorData = data;
+	}
 
 	@Override
 	public double result()

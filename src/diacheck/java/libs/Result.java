@@ -10,7 +10,7 @@ public class Result
 	private final PH ph;
 	private final SpecificGravity specificGravity;
 	
-	Result(Glucose glucose, Ketones ketones, PH ph, Protein protein, SpecificGravity specificGravity)
+	public Result(Glucose glucose, Ketones ketones, PH ph, Protein protein, SpecificGravity specificGravity)
 	{
 		this.glucose = glucose;
 		this.ketones = ketones;
@@ -37,5 +37,10 @@ public class Result
 	public Statement getStatementForPH()
 	{
 		return ph.statement();
+	}
+	
+	public Statement getGeneralStatement()
+	{
+		return Statement.GOOD;
 	}
 }

@@ -52,17 +52,25 @@ public class ImageTransformer
 	
 	public boolean saveToFile(final File filePath) throws IOException
 	{
-		if(!ImageReader.fileType(filePath).equals("png"))
-			throw new IllegalArgumentException("File type must be \"png\" for file, but was " + ImageReader.fileType(filePath));
+		if(!fileType(filePath).equals("png"))
+			throw new IllegalArgumentException("File type must be \"png\" for file, but was " + fileType(filePath));
 		return ImageIO.write(imageData, "PNG", filePath);
 	}
 	
 	public boolean saveToFile() throws IOException
 	{
 		File newFile = new File(image.getAbsolutePath());
-		if(!ImageReader.fileType(newFile).equals("png"))
+		if(!fileType(newFile).equals("png"))
 			newFile = changeFileEndingToPNG(newFile);
 		return ImageIO.write(imageData, "PNG", newFile);
+	}
+	
+	private static String fileType(File filePath)
+	{
+		final String filename = filePath.getPath();
+		final String[] filenameSplitted = filename.split("\\.");
+		final int fileTypePosition = filenameSplitted.length - 1;
+		return filenameSplitted[fileTypePosition].toLowerCase();
 	}
 
 	private File changeFileEndingToPNG(File filePath)

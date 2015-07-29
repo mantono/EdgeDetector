@@ -33,7 +33,7 @@ public class ImageReader
 			throw new FileNotFoundException("File " + file + " can not be read");
 		imageData = ImageIO.read(imageFile);
 		fields = new FieldFinder(imageData);
-		whiteBalance = analyzeWhiteBalance();
+		whiteBalance = fields.getWhiteBalance();
 		checkBrightness();
 		checkNoiseLevels();
 	}
@@ -43,7 +43,7 @@ public class ImageReader
 		this.imageFile = null;
 		this.imageData = bufferedImage;
 		fields = new FieldFinder(imageData);
-		whiteBalance = analyzeWhiteBalance();
+		whiteBalance = fields.getWhiteBalance();
 		checkNoiseLevels();
 	}
 	
@@ -78,30 +78,15 @@ public class ImageReader
 		if(whiteBalance.getRed() - whiteBalance.getGreen() > 25)
 			throw new HighNoiseException("Noise is above allowed threshold, red: " + whiteBalance.getRed() + " - green: " + whiteBalance.getGreen());
 	}
-
-	private Color analyzeWhiteBalance() throws IOException
+	
+	public Field getField(FieldType fieldType)
 	{
-		try
-		{
-			Field whiteBalance = fields.locateField(FieldType.WHITE_BALANCE);
-			return whiteBalance.getAverageColor();
-		}
-		catch(IllegalArgumentException exception)
-		{
-			throw new WhiteBalanceException("Could not find white balance field. This can be because of bad color balance in image");
-		}
+		return fields.locateField(fieldType);
 	}
 
 	public static Color getColor(int pixel)
 	{
 		return new Color(getRed(pixel), getGreen(pixel), getBlue(pixel));
-	}
-
-	private Color whiteBalanceCompensation(Color averageColor)
-	{
-		final int redGreenDiff = whiteBalance.getGreen() - whiteBalance.getRed();
-		final int blueGreenDiff = whiteBalance.getGreen() - whiteBalance.getBlue();
-		return new Color(averageColor.getRed() + redGreenDiff, averageColor.getGreen(), averageColor.getBlue() + blueGreenDiff);
 	}
 
 	private static int getRed(final int pixel)
@@ -176,12 +161,4 @@ public class ImageReader
 		
 		return false;
 	}	
-
-	public static String fileType(File filePath)
-	{
-		final String filename = filePath.getPath();
-		final String[] filenameSplitted = filename.split("\\.");
-		final int fileTypePosition = filenameSplitted.length - 1;
-		return filenameSplitted[fileTypePosition].toLowerCase();
-	}
 }
