@@ -12,7 +12,15 @@ import javax.imageio.ImageIO;
 import org.junit.Before;
 import org.junit.Test;
 
+import diacheck.java.libs.Result;
+import diacheck.java.libs.analytes.Glucose;
+import diacheck.java.libs.analytes.Ketones;
+import diacheck.java.libs.analytes.PH;
+import diacheck.java.libs.analytes.Protein;
+import diacheck.java.libs.analytes.SpecificGravity;
 import diacheck.java.libs.imageTools.ControlFieldReader;
+import diacheck.java.libs.imageTools.Field;
+import diacheck.java.libs.imageTools.FieldType;
 import diacheck.java.libs.imageTools.IllegalInputDataException;
 import diacheck.java.libs.imageTools.ImageReader;
 import diacheck.java.libs.imageTools.ImageTransformer;
@@ -37,9 +45,6 @@ public class IntergrationTest
 		assertEquals(0.1221730476, cfReader.readAligment(), 0.01);
 		
 		final Point leftFirst = cfReader.getLeftControlField();
-		final Point rightFirst = cfReader.getRightControlField();
-		final Point bottomFirst = cfReader.getBottomControlField();
-
 		
 		ImageTransformer imageTransformer = new ImageTransformer(input);
 		imageTransformer.rotate(leftFirst, cfReader.readAligment());
@@ -51,6 +56,14 @@ public class IntergrationTest
 		//checkControlFieldPositions(imageData, left, right, bottom);
 		
 		ImageReader image = new ImageReader(rotated);
+		
+		final Glucose glucose = new Glucose(image.getField(FieldType.GLUCOSE));
+		final Ketones ketones = new Ketones(image.getField(FieldType.KETONES));
+		final PH ph = new PH(image.getField(FieldType.PH));
+		final Protein protein = new Protein(image.getField(FieldType.PROTEIN));
+		final SpecificGravity specificGravity = new SpecificGravity(image.getField(FieldType.SPECIFIC_GRAVITY));
+		
+		Result result = new Result(glucose, ketones, ph, protein, specificGravity);
 	}
 	
 	private void checkControlFieldPositions(BufferedImage imageData, Point leftControlField, Point rightControlField, Point bottomControlField)
