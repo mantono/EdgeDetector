@@ -20,6 +20,7 @@ import diacheck.java.libs.imageTools.Field;
 import diacheck.java.libs.imageTools.FieldType;
 import diacheck.java.libs.imageTools.ImageReader;
 import diacheck.java.libs.imageTools.HighNoiseException;
+import diacheck.java.libs.imageTools.ImageTransformer;
 
 public class ImageReaderTest
 {
@@ -91,14 +92,5 @@ public class ImageReaderTest
 		assertFalse(ImageReader.isEdge(blue1, blue2)); // diff == 45
 		assertTrue(ImageReader.isEdge(blue1, blue3)); // diff == 46
 		assertTrue(ImageReader.isEdge(blue1, blueGrey));
-	}
-	
-	@Test
-	public void testCheckFiletype()
-	{
-		File file = new File("/home/test/long/path/with.dots/test.jpg");
-		assertEquals("jpg", ImageReader.fileType(file));
-		file = new File("TEST.PNG");
-		assertEquals("png", ImageReader.fileType(file));
 	}
 }

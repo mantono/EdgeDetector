@@ -56,5 +56,4 @@ public class Triangle
 	{
 		return Point.distance(point1.x, point1.y, point2.x, point2.y);
 	}
-
 }

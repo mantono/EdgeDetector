@@ -64,6 +64,7 @@ public class IntergrationTest
 		final SpecificGravity specificGravity = new SpecificGravity(image.getField(FieldType.SPECIFIC_GRAVITY));
 		
 		Result result = new Result(glucose, ketones, ph, protein, specificGravity);
+		result.getGeneralStatement();
 	}
 	
 	private void checkControlFieldPositions(BufferedImage imageData, Point leftControlField, Point rightControlField, Point bottomControlField)

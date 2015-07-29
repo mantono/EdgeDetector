@@ -35,6 +35,4 @@ public class ImageSender
 		streamOut.flush();
 		return false;
 	}
-	
-	
 }

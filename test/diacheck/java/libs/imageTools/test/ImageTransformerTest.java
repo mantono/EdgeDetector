@@ -58,7 +58,7 @@ public class ImageTransformerTest
 			e.printStackTrace();
 		}
 	}
-	
+
 	@Test
 	public void testRotateAndCrop() throws IOException
 	{
@@ -73,7 +73,7 @@ public class ImageTransformerTest
 			Point startOfFirstControlField = image.getLeftControlField();
 			imageTransformed.rotate(startOfFirstControlField, requiredRotation);
 			imageTransformed.saveToFile(output);
-			
+
 			imageTransformed.removePixelsOutsideControlFields();
 			imageTransformed.saveToFile(output);
 		}
@@ -81,6 +81,15 @@ public class ImageTransformerTest
 		{
 			e.printStackTrace();
 		}
+	}
+
+	@Test
+	public void testCheckFiletype()
+	{
+		File file = new File("/home/test/long/path/with.dots/test.jpg");
+		assertEquals("jpg", ImageTransformer.fileType(file));
+		file = new File("TEST.PNG");
+		assertEquals("png", ImageTransformer.fileType(file));
 	}
 
 }

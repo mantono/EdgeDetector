@@ -65,7 +65,7 @@ public class ImageTransformer
 		return ImageIO.write(imageData, "PNG", newFile);
 	}
 	
-	private static String fileType(File filePath)
+	public static String fileType(File filePath)
 	{
 		final String filename = filePath.getPath();
 		final String[] filenameSplitted = filename.split("\\.");
