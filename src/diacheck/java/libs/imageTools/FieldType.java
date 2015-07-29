@@ -13,22 +13,12 @@ import java.util.Set;
 
 public enum FieldType
 {
-	WHITE_BALANCE(50, 0.53962, 0.68495,
-			new Color(155, 155, 155),
-			new Color(175, 175, 175),
-			new Color(195, 195, 195),
-			new Color(205, 205, 205),
-			new Color(225, 225, 225)),
-	CONTROL(25, 0.5, 0.5, new Color(151, 255, 0)),
+	WHITE_BALANCE(50, 0.53962, 0.68495),
+	CONTROL(25, 0.5, 0.5),
 	GLUCOSE(20, 0.75075, 0.49887),
-	KETONES(35,	0.9708214, 0.049887,
-			new Color(254, 250, 202),
-			new Color(254, 221, 188),
-			new Color(223, 179, 196),
-			new Color(177, 87, 141),
-			new Color(81, 0, 77)),
-	PH(25, 0.67251, 0.484962, new Color(169, 91, 43)),
-	PROTEIN(35, 0.606241, 0.483459, new Color(114, 98, 36), new Color(95, 87, 30)),
+	KETONES(35,	0.9708214, 0.049887),
+	PH(25, 0.67251, 0.484962),
+	PROTEIN(35, 0.606241, 0.483459),
 	SPECIFIC_GRAVITY(20, 0.5, 0.5);
 
 	private final double xRatio;
@@ -60,12 +50,12 @@ public enum FieldType
 	private Set<Color> readPermittdFieldColors()
 	{
 		final String file = "permittedColors/" + this.toString() + ".csv";
-		final URL permittedColorsFilePath = getClass().getResource(file);
-		final File permittedColorsFile = new File(permittedColorsFilePath.getPath());
 		final Set<Color> colors = new HashSet<Color>();
 
 		try
 		{
+			final URL permittedColorsFilePath = getClass().getResource(file);
+			final File permittedColorsFile = new File(permittedColorsFilePath.getPath());
 			if(!permittedColorsFile.canRead())
 				throw new FileNotFoundException("Can't read file " + permittedColorsFile);
 			BufferedReader reader = new BufferedReader(new FileReader(permittedColorsFile));
@@ -78,7 +68,7 @@ public enum FieldType
 			}
 			reader.close();
 		}
-		catch(FileNotFoundException exception)
+		catch(NullPointerException | FileNotFoundException exception)
 		{
 			System.err.println("Could not find permitted colors file for FieldType " + this.toString());
 			exception.printStackTrace();

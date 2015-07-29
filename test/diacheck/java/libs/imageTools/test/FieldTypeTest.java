@@ -20,7 +20,7 @@ public class FieldTypeTest
 	private void checkColor(FieldType field, Color... colors)
 	{
 		for(Color color : colors)
-			assertTrue(field.getPermittedColors().contains(color));
+			assertTrue("Missing color " + color, field.getPermittedColors().contains(color));
 	}
 
 	@Test
