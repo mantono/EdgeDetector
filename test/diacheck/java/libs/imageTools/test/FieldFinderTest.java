@@ -73,19 +73,19 @@ public class FieldFinderTest
 	@Test
 	public void testLocateKetonesField() throws IOException
 	{
-		testField(FieldType.KETONES, new Color(122, 107, 126));
+		testField(FieldType.KETONES, new Color(223, 179, 196));
 	}
 	
 	@Test
 	public void testLocatePHField() throws IOException
 	{
-		testField(FieldType.PH, new Color(0, 0, 0));
+		testField(FieldType.PH, new Color(169, 91, 43));
 	}
 	
 	@Test
 	public void testLocateProteinField() throws IOException
 	{
-		testField(FieldType.PROTEIN, new Color(0, 0, 0));
+		testField(FieldType.PROTEIN, new Color(104, 93, 33));
 	}
 	
 	@Test
