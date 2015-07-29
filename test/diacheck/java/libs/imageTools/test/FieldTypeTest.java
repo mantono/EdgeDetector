@@ -60,6 +60,7 @@ public class FieldTypeTest
 				new Color(254, 221, 188),
 				new Color(223, 179, 196),
 				new Color(177, 87, 141),
+				new Color(110, 95, 114),
 				new Color(81, 0, 77));
 		assertEquals(35, FieldType.KETONES.getThreshold());
 	}

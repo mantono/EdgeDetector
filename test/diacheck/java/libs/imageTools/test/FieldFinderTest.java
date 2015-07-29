@@ -31,12 +31,6 @@ public class FieldFinderTest
 	}
 
 	@Test
-	public void test()
-	{
-		fail("Not yet implemented");
-	}
-	
-	@Test
 	public void testFindFirstPixelOfFieldForWhiteBalance() throws IOException
 	{
 		final Point foundPixel = fieldFinder.findFirstPixelOfField(FieldType.WHITE_BALANCE);
@@ -91,7 +85,7 @@ public class FieldFinderTest
 	@Test
 	public void testLocateSpecificGravityField() throws IOException
 	{
-		testField(FieldType.SPECIFIC_GRAVITY, new Color(0, 0, 0));
+		testField(FieldType.SPECIFIC_GRAVITY, new Color(159, 132, 89));
 	}
 	
 	public void testField(FieldType field, Color expectedColor) throws IOException
