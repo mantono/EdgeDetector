@@ -2,13 +2,8 @@ package diacheck.java.libs.imageTools;
 
 
 import java.awt.Color;
-import java.awt.Point;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
-import edu.emory.mathcs.backport.java.util.Arrays;
+import java.util.Arrays;
 
 public class Field
 {
@@ -23,7 +18,6 @@ public class Field
 			throw new IllegalArgumentException("The amount of pixels must be at least one!");
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Field(FieldType type, final Color[] pixels)
 	{
 		this(type, (List<Color>) Arrays.asList(pixels));
