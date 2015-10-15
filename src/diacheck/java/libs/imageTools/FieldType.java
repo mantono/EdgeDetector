@@ -11,6 +11,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Each FieldType describes the permitted color input for each type of field found in a sample image. It also has their position relative to the control fields within the image.
+ * @author Anton &Ouml;sterberg
+ *
+ */
 public enum FieldType
 {
 	WHITE_BALANCE(50, 0.53962, 0.68495),
@@ -41,13 +46,13 @@ public enum FieldType
 		this.xRatio = xRatio;
 		this.yRatio = yRatio;
 
-		permittedValues = readPermittdFieldColors();
+		permittedValues = readPermittdFieldColorsFromFile();
 		if(threshold < 0 || threshold > 255)
 			throw new IllegalArgumentException("Allowed range for parameter threshold is 0 to 255");
 		this.threshold = (short) threshold;
 	}
 
-	private Set<Color> readPermittdFieldColors()
+	private Set<Color> readPermittdFieldColorsFromFile()
 	{
 		final String file = "permittedColors/" + this.toString() + ".csv";
 		final Set<Color> colors = new HashSet<Color>();
@@ -109,27 +114,77 @@ public enum FieldType
 	{
 		return Integer.valueOf(colorChannel.trim());
 	}
+	
+	/**
+	 * Method to verify whether the input <code>Color</color> matches any of those allowed for the current <code>FieldType</code>.
+	 * 
+	 * @param matchingColor - color to be checked if it falls within the allowed parameters.
+	 * @return returns true if it is a permitted color, else false.
+	 */
+	public boolean hasColor(Color matchingColor)
+	{
+		for(Color color : permittedValues)
+			if(isWithinThreshold(matchingColor, color))
+				return true;
+		
+		return false;
+	}
+	
+	private boolean isWithinThreshold(Color matchingColor, Color fieldColor)
+	{
+		final int diffRed = Math.abs(matchingColor.getRed() - fieldColor.getRed());
+		if(diffRed > threshold)
+			return false;
+		
+		final int diffGreen = Math.abs(matchingColor.getGreen() - fieldColor.getGreen());;
+		if(diffGreen > threshold)
+			return false;
+		
+		final int diffBlue = Math.abs(matchingColor.getBlue() - fieldColor.getBlue());;
+		if(diffBlue > threshold)
+			return false;
+		
+		return true;
+	}
 
-	public Set<Color> getPermittedColors()
+	/**
+	 * 
+	 * @return returns the permitted colors for the particular FieldType.
+	 */
+	private  Set<Color> getPermittedColors()
 	{
 		return permittedValues;
 	}
 
-	public Color getColor()
+	private Color getColor()
 	{
 		return permittedValues.iterator().next();
 	}
 
-	public short getThreshold()
+	/**
+	 * 
+	 * @return returns the threshold for how much a color is allowed to deviate from any of the permitted colors.
+	 */
+	private short getThreshold()
 	{
 		return threshold;
 	}
 
+	/**
+	 * 
+	 * @param imageWidth - the width of the sample image after it has been cropped.
+	 * @return returns the absolute X coordinate for where the field is supposed to start. 
+	 */
 	public int getX(int imageWidth)
 	{
 		return (int) (imageWidth * xRatio);
 	}
 
+	/**
+	 * 
+	 * @param imageHeight - the height of the sample image after it has been cropped.
+	 * @return returns the absolute Y coordinate for where the field is supposed to start. 
+	 */
 	public int getY(int imageHeight)
 	{
 		return (int) (imageHeight * yRatio);
