@@ -3,7 +3,7 @@ package diacheck.java.libs;
 import java.io.File;
 import java.io.Serializable;
 
-import com.mantono.www.Date;
+import com.mantono.time.Date;
 
 public class SampleRequest implements Serializable, Comparable<SampleRequest>
 {
