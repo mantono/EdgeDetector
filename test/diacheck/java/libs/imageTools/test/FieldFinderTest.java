@@ -40,7 +40,7 @@ public class FieldFinderTest
 	@Test
 	public void testFindRandomPixelsInControlField()
 	{
-		List<Point> pixelsInControlFields = fieldFinder.findRandomPixelInEachField(3, FieldType.CONTROL.getColor());
+		List<Point> pixelsInControlFields = fieldFinder.findRandomPixelInEachField(3, FieldType.CONTROL);
 		assertEquals(3, pixelsInControlFields.size());
 	}
 	

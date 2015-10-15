@@ -65,7 +65,7 @@ public class FieldFinder
 		while(searchedPixelsWithNoMatch < 5)
 		{		
 			Color colorForCurrentPixel = ImageReader.getColor(imageData.getRGB(x, y));
-			if(hasColor(colorForCurrentPixel, fieldType.getPermittedColors(), fieldType.getThreshold()))
+			if(fieldType.hasColor(colorForCurrentPixel))
 			{
 				searchedPixelsWithNoMatch = 0;
 				foundColors.add(colorForCurrentPixel);
@@ -114,11 +114,9 @@ public class FieldFinder
 		Color leftColor = ImageReader.getColor(imageData.getRGB(left.x, left.y));
 		Color upColor = ImageReader.getColor(imageData.getRGB(up.x, up.y));
 		
-		final short colorThreshold = fieldType.getThreshold();
-		
-		while(hasColor(leftColor, fieldType.getPermittedColors(), colorThreshold) || hasColor(upColor, fieldType.getPermittedColors(), colorThreshold))
+		while(fieldType.hasColor(leftColor) || fieldType.hasColor(upColor))
 		{
-			if(hasColor(leftColor, fieldType.getPermittedColors(), colorThreshold))
+			if(fieldType.hasColor(leftColor))
 				current = left;
 			else
 				current = up;
@@ -135,7 +133,7 @@ public class FieldFinder
 		return current;
 	}
 	
-	public List<Point> findRandomPixelInEachField(int numberOfFields, Color fieldColor)
+	public List<Point> findRandomPixelInEachField(int numberOfFields, FieldType fieldType)
 	{
 		Set<Point> checkedPixels = new HashSet<Point>();
 		List<Point> fields = new ArrayList<Point>(numberOfFields);
@@ -156,7 +154,7 @@ public class FieldFinder
 			Point currentPixel = new Point(x, y);
 			checkedPixels.add(currentPixel);
 			Color pixelColor = ImageReader.getColor(imageData.getRGB(x, y));
-			if(FieldFinder.hasColor(pixelColor, fieldColor, 25))
+			if(fieldType.hasColor(pixelColor))
 			{
 				boolean pixelBelongsToAlreadyFoundField = false;
 				for(Point pixel : fields)
@@ -185,33 +183,5 @@ public class FieldFinder
 	private boolean hasReachedEdgeOfImage(Point current)
 	{
 		return current.x == 0 || current.y == 0;
-	}
-	
-	public static boolean hasColor(Color matchingColor, Color fieldColor, int threshold)
-	{
-		final int diffRed = Math.abs(matchingColor.getRed() - fieldColor.getRed());
-		if(diffRed > threshold)
-			return false;
-		
-		final int diffGreen = Math.abs(matchingColor.getGreen() - fieldColor.getGreen());;
-		if(diffGreen > threshold)
-			return false;
-		
-		final int diffBlue = Math.abs(matchingColor.getBlue() - fieldColor.getBlue());;
-		if(diffBlue > threshold)
-			return false;
-		
-		return true;
-	}
-	
-	public static boolean hasColor(Color matchingColor, Set<Color> fieldColors, int threshold)
-	{
-		for(Color color : fieldColors)
-		{
-			if(hasColor(matchingColor, color, threshold))
-				return true;
-		}
-		
-		return false;
 	}
 }
