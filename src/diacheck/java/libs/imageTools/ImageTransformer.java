@@ -10,7 +10,8 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 /**
- * 
+ * <code>ImageTransformer</code> is mainly the class responsible for manipulating the data in the image file. Most important features are rotation and cropping, which enables the
+ * <code>ImageReader</code> class to read less but more relevant data.
  * @author Anton &Ouml;sterberg
  */
 

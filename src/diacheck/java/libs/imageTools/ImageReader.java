@@ -14,6 +14,10 @@ import javax.imageio.ImageIO;
 /**
  * 
  * @author Anton &Ouml;sterberg
+ * 
+ * The <code>ImageReader</code> class is responsible for managing and analyzing all the vital data that in the image. During initiation of an instance it will check that the source image
+ * has a noise level with the threshold value and that the white balance is not too skewed. An unacceptable image will result in an error in form of either <code>WhiteBalanceException</code>
+ * or a <code>HighNoiseException</code>.
  */
 
 public class ImageReader
@@ -26,6 +30,11 @@ public class ImageReader
 	private final BufferedImage imageData;
 	private final FieldFinder fields;
 
+	/**
+	 * 
+	 * @param file takes a <code>File</code> object as parameter. The file must have read access.
+	 * @throws IOException if file cannot be read.
+	 */
 	public ImageReader(File file) throws IOException
 	{
 		this.imageFile = file;
@@ -38,7 +47,11 @@ public class ImageReader
 		checkNoiseLevels();
 	}
 	
-	public ImageReader(BufferedImage bufferedImage) throws IOException
+	/**
+	 * 
+	 * @param bufferedImage
+	 */
+	public ImageReader(BufferedImage bufferedImage)
 	{
 		this.imageFile = null;
 		this.imageData = bufferedImage;
@@ -79,11 +92,21 @@ public class ImageReader
 			throw new HighNoiseException("Noise is above allowed threshold, red: " + whiteBalance.getRed() + " - green: " + whiteBalance.getGreen());
 	}
 	
+	/**
+	 * @see diacheck.java.libs.imageTools.FieldFinder#locateField(FieldType)
+	 * @param fieldType the <code>FieldType</code> that the method should search for.
+	 * @return returns an instance of that field created from data located in the image.
+	 */
 	public Field getField(FieldType fieldType)
 	{
 		return fields.locateField(fieldType);
 	}
 
+	/**
+	 * Converts an <code>int</code> representation of a colour to a <code>Colour</code> object that contains values for the three color channels red, green and blue.
+	 * @param pixel an <code>int</code> representing the colour of a pixel.
+	 * @return returns a <code>Colour</code> object.
+	 */
 	public static Color getColor(int pixel)
 	{
 		return new Color(getRed(pixel), getGreen(pixel), getBlue(pixel));

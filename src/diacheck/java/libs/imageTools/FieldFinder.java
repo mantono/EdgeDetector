@@ -13,6 +13,14 @@ import diacheck.java.libs.imageTools.Field;
 import diacheck.java.libs.imageTools.FieldType;
 import diacheck.java.libs.imageTools.ImageReader;
 
+/**
+ * Fieldfinder is a class for locating specific data fields within an image. Image data is passed to the constructor as a <code>BufferedImage</code> object, and the search
+ * for the field is initiated through the method <code>locateField()</code>
+ * 
+ * @author Anton &Ouml;sterberg
+ * 
+ */
+
 public class FieldFinder
 {
 	private final BufferedImage imageData;
