@@ -3,10 +3,9 @@ package diacheck.java.libs.imageTools;
 import java.awt.image.BufferedImage;
 
 /**
- * 
- * @author Anton &Ouml;sterberg
  * This class purpose is to check the quality and validity of an image sample, concerning the image quality without regard to medical data.
  * The variables being checked are noise and exposure level.
+ * @author Anton &Ouml;sterberg
  */
 public class ImageValidator
 {
@@ -39,7 +38,7 @@ public class ImageValidator
 	 * 
 	 * @return returns a <code>double</code> value between 0 and 1, where 0 indicates no underexposed pixels and 1 that all pixels in the image are underexposed.
 	 */
-	public double getUnderexposureRation()
+	public double getUnderexposureRatio()
 	{
 		return 0;
 	}
