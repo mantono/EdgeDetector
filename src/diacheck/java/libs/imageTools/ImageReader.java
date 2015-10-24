@@ -41,10 +41,18 @@ public class ImageReader
 		if(!file.canRead())
 			throw new FileNotFoundException("File " + file + " can not be read");
 		imageData = ImageIO.read(imageFile);
+		
+		ImageValidator qualityControl = new ImageValidator(imageData);
+		if(qualityControl.getNoiseLevel() > 0.013)
+			throw new HighNoiseException("Noise level is too high: " + qualityControl.getNoiseLevel());
+		if(qualityControl.getOverexposureRatio() > 0.02)
+			throw new BadExposureException(qualityControl.getOverexposureRatio());
+		if(qualityControl.getUnderexposureRatio() > 0.02)
+			throw new BadExposureException(qualityControl.getUnderexposureRatio());
+		
 		fields = new FieldFinder(imageData);
 		whiteBalance = fields.getWhiteBalance();
-		checkBrightness();
-		checkNoiseLevels();
+		checkWhiteBalance();
 	}
 	
 	/**
@@ -57,23 +65,16 @@ public class ImageReader
 		this.imageData = bufferedImage;
 		fields = new FieldFinder(imageData);
 		whiteBalance = fields.getWhiteBalance();
-		checkNoiseLevels();
 	}
 	
-	private void checkBrightness()
+	private void checkWhiteBalance()
 	{
 		final int red = whiteBalance.getRed();
 		final int green = whiteBalance.getGreen();
 		final int blue = whiteBalance.getBlue();
-		final int valueOfAllChannels = red + green + blue;
 		
-		final short min = 120;
-		final short max = 230;
-		
-		if(valueOfAllChannels > 3*max)
-			throw new WhiteBalanceException("Image too bright: Value of all color channels combined is over" + 3*max + ": " + valueOfAllChannels);
-		if(valueOfAllChannels < 2*min)
-			throw new WhiteBalanceException("Image too dark: Value of all color channels combined is less than " + 2*min + ": " + valueOfAllChannels);
+		final short min = 110;
+		final short max = 240;
 		
 		if(red < min || red > max)
 			throw new WhiteBalanceException("Red channel is unbalanced: " + red);
@@ -82,14 +83,6 @@ public class ImageReader
 		if(blue < min || blue > max)
 			throw new WhiteBalanceException("Blue channel is unbalanced: " + blue);
 		
-	}
-
-	private void checkNoiseLevels()
-	{
-		if(whiteBalance.getRed() - whiteBalance.getBlue() > 25)
-			throw new HighNoiseException("Noise is above allowed threshold, red: " + whiteBalance.getRed() + " - blue: " + whiteBalance.getBlue());
-		if(whiteBalance.getRed() - whiteBalance.getGreen() > 25)
-			throw new HighNoiseException("Noise is above allowed threshold, red: " + whiteBalance.getRed() + " - green: " + whiteBalance.getGreen());
 	}
 	
 	/**
@@ -136,6 +129,7 @@ public class ImageReader
 		{
 			for(int x = distance; x < imageData.getWidth(); x += 2)
 			{
+				//TODO x and y may be out of bounds after increment?
 				int currentPixel = imageData.getRGB(x, y);
 				int previousPixel = imageData.getRGB(x-distance,  y);
 				if(isEdge(currentPixel, previousPixel))

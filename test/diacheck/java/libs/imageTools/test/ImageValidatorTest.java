@@ -37,7 +37,23 @@ public class ImageValidatorTest
 		assertEquals(0, imageBlue.getNoiseLevel(), 0.00001);
 		
 		ImageValidator imageMaxNoise = getImageValidatorFromString("black_and_white_max_noise.png");
-		assertEquals(1, imageMaxNoise.getNoiseLevel(), 0.00001);
+		assertEquals(1, imageMaxNoise.getNoiseLevel(), 0.0000000000001);
+	}
+	
+	@Test
+	public void testCustomNoiseRealPhotoAsReference() throws IOException
+	{
+		ImageValidator imageNoise100 = getImageValidatorFromString("../SDR/ISO100_water_negative.jpg");
+		assertEquals(0.009, imageNoise100.getNoiseLevel(), 0.001);
+		
+		ImageValidator imageNoise800 = getImageValidatorFromString("../SDR/ISO800_water_negative.jpg");
+		assertEquals(0.0122, imageNoise800.getNoiseLevel(), 0.0001);
+		
+		ImageValidator imageNoise2000 = getImageValidatorFromString("../SDR/ISO2000_water_negative.jpg");
+		assertEquals(0.015, imageNoise2000.getNoiseLevel(), 0.0001);
+		
+		ImageValidator imageNoise25_600 = getImageValidatorFromString("../SDR/ISO25600_water_negative.jpg");
+		assertEquals(0.054, imageNoise25_600.getNoiseLevel(), 0.001);
 	}
 
 	@Test

@@ -21,7 +21,7 @@ public class ImageValidator
 
 	/**
 	 * 
-	 * @return returns a double value between 0 and 1, where 0 indicateS no
+	 * @return a double value between 0 and 1, where 0 indicates no
 	 *         noise at all and 1 the maximum amount of possible noise.
 	 */
 	public double getNoiseLevel()
@@ -63,6 +63,7 @@ public class ImageValidator
 		Color previousPixel = ImageReader.getColor(cluster[0]);
 		for(int i = 1; i < 9; i++)
 		{
+			//TODO this may be optimized by using bit manipulation and not class Color.
 			Color currentPixel = ImageReader.getColor(cluster[i]);
 
 			diffSum += getChannelsDifference(currentPixel, previousPixel) / (255 * 3);
@@ -72,7 +73,7 @@ public class ImageValidator
 		return diffSum / 8;
 	}
 
-	private int getChannelsDifference(Color currentPixel, Color previousPixel)
+	private float getChannelsDifference(Color currentPixel, Color previousPixel)
 	{
 		final int currentRed = currentPixel.getRed();
 		final int currentGreen = currentPixel.getGreen();
@@ -91,7 +92,7 @@ public class ImageValidator
 
 	/**
 	 * 
-	 * @return returns a <code>double</code> value between 0 and 1, where 0
+	 * @return a <code>double</code> value between 0 and 1, where 0
 	 *         indicates no overexposed pixels and 1 that all pixels in the
 	 *         image are overexposed.
 	 */
@@ -125,7 +126,7 @@ public class ImageValidator
 
 	/**
 	 * 
-	 * @return returns a <code>double</code> value between 0 and 1, where 0
+	 * @return a <code>double</code> value between 0 and 1, where 0
 	 *         indicates no underexposed pixels and 1 that all pixels in the
 	 *         image are underexposed.
 	 */
@@ -159,7 +160,7 @@ public class ImageValidator
 
 	/**
 	 * 
-	 * @return returns the average exposure for the pixels in the image, ranging
+	 * @return the average exposure for the pixels in the image, ranging
 	 *         from 0 to 255.
 	 */
 	public float getAverageExposure()

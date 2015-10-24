@@ -9,10 +9,11 @@ import diacheck.java.libs.imageTools.test.FieldFinderTest;
 import diacheck.java.libs.imageTools.test.FieldTest;
 import diacheck.java.libs.imageTools.test.ImageReaderTest;
 import diacheck.java.libs.imageTools.test.ImageTransformerTest;
+import diacheck.java.libs.imageTools.test.ImageValidatorTest;
 import diacheck.java.libs.imageTools.test.IntergrationTest;
 
 @RunWith(Suite.class)
-@SuiteClasses({ TriangleTest.class, ImageReaderTest.class, FieldTest.class, ImageTransformerTest.class, FieldFinderTest.class, ControlFieldReaderTest.class, IntergrationTest.class })
+@SuiteClasses({ TriangleTest.class, ImageReaderTest.class, ImageValidatorTest.class, FieldTest.class, ImageTransformerTest.class, FieldFinderTest.class, ControlFieldReaderTest.class, IntergrationTest.class })
 public class AllTests
 {
 
