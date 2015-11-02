@@ -124,10 +124,11 @@ public class ImageReader
 	{
 		final int distance = 4;
 		Set<Point> edges = new HashSet<Point>();
-
-		for(int y = distance; y < imageData.getHeight(); y += 2)
+		final int width = imageData.getWidth() - 2;
+		final int height = imageData.getHeight() - 2;
+		for(int y = distance; y < height; y += 2)
 		{
-			for(int x = distance; x < imageData.getWidth(); x += 2)
+			for(int x = distance; x < width; x += 2)
 			{
 				//TODO x and y may be out of bounds after increment?
 				int currentPixel = imageData.getRGB(x, y);
