@@ -99,8 +99,22 @@ public class ImageValidatorTest
 	{
 		final String path = ImageReaderTest.IMAGE_PATH + "/ImageValidator/" + imageName;
 		File imageFile = new File(path);
-		assertTrue(imageFile.canRead());
+		assertTrue("Cant read " + imageFile.toString(), imageFile.canRead());
 		return new ImageValidator(ImageIO.read(imageFile));
+	}
+	
+	@Test
+	public void testGetAverageEqposure2() throws IOException
+	{
+		File imageFile = new File(ImageReaderTest.IMAGE_PATH + "GOOD_horizontal_and_cropped.png");
+		assertTrue("Cant read " + imageFile.toString(), imageFile.canRead());
+		ImageValidator original = new ImageValidator(ImageIO.read(imageFile));		
+		System.out.println(original.getAverageExposure());	
+		
+		File imageFile2 = new File(ImageReaderTest.IMAGE_PATH + "GOOD_horizontal_and_cropped_increased_birghtness_and_contrast.png");
+		assertTrue("Cant read " + imageFile2.toString(), imageFile2.canRead());
+		ImageValidator enhanced = new ImageValidator(ImageIO.read(imageFile2));
+		System.out.println(enhanced.getAverageExposure());
 	}
 
 }

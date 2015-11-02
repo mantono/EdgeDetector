@@ -36,9 +36,9 @@ public class ControlFieldReaderTest
 	@Test
 	public void readAligment() throws IOException
 	{
-		final File input = new File(ImageReaderTest.IMAGE_PATH + "flash_sharp2_with_fake_rotation_and_fake_control_fields.jpg");
+		final File input = new File(ImageReaderTest.IMAGE_PATH + "GOOD_with_rotation.png");
 		BufferedImage imageData = ImageIO.read(input);
 		ControlFieldReader cfReader = new ControlFieldReader(imageData);
-		assertEquals(0.1884033450, cfReader.readAligment(), 0.01);
+		assertEquals(0.1265731, cfReader.readAligment(), 0.01);
 	}
 }

@@ -20,11 +20,11 @@ public enum FieldType
 {
 	WHITE_BALANCE(50, 0.53962, 0.68495),
 	CONTROL(25, 0.5, 0.5),
-	GLUCOSE(20, 0.75075, 0.49887),
-	KETONES(35,	0.9446, 0.485714),
-	PH(25, 0.67251, 0.484962),
-	PROTEIN(35, 0.606241, 0.483459),
-	SPECIFIC_GRAVITY(60, 0.80575, 0.48722);
+	GLUCOSE(30, 0.75075, 0.49887),
+	KETONES(40,	0.9446, 0.485714),
+	PH(75, 0.67251, 0.484962),
+	PROTEIN(90, 0.606241, 0.483459),
+	SPECIFIC_GRAVITY(40, 0.80575, 0.48722);
 
 	private final double xRatio;
 	private final double yRatio;
@@ -136,11 +136,11 @@ public enum FieldType
 		if(diffRed > threshold)
 			return false;
 		
-		final int diffGreen = Math.abs(matchingColor.getGreen() - fieldColor.getGreen());;
+		final int diffGreen = Math.abs(matchingColor.getGreen() - fieldColor.getGreen());
 		if(diffGreen > threshold)
 			return false;
 		
-		final int diffBlue = Math.abs(matchingColor.getBlue() - fieldColor.getBlue());;
+		final int diffBlue = Math.abs(matchingColor.getBlue() - fieldColor.getBlue());
 		if(diffBlue > threshold)
 			return false;
 		
