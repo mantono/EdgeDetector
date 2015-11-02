@@ -86,7 +86,8 @@ public class FieldFinder
 			}
 			x += direction;
 		}
-		foundColors = whiteBalanceCompensation(foundColors);
+		if(fieldType != FieldType.WHITE_BALANCE)
+			foundColors = whiteBalanceCompensation(foundColors);
 		return new Field(fieldType, foundColors);
 	}
 	
@@ -113,34 +114,47 @@ public class FieldFinder
 		return  findFirstPixelOfField(fieldType, fieldCenter);
 	}
 	
-	public Point findFirstPixelOfField(FieldType fieldType, Point point)
+	public Point findFirstPixelOfField(FieldType fieldType, Point start)
 	{
-		Point current = point;
-		Point left = new Point(current.x-1, current.y);
-		Point up = new Point(current.x, current.y-1);
+		Point current, previous;
+		current = previous = start;
 		
-		Color leftColor = ImageReader.getColor(imageData.getRGB(left.x, left.y));
-		Color upColor = ImageReader.getColor(imageData.getRGB(up.x, up.y));
-		
-		while(fieldType.hasColor(leftColor) || fieldType.hasColor(upColor))
-		{
-			if(fieldType.hasColor(leftColor))
-				current = left;
-			else
-				current = up;
-			
+		while(current != null)
+		{	
 			if(hasReachedEdgeOfImage(current))
 				throw new IllegalStateException("Reached end of image when looking for first pixel of field for " + fieldType);
 			
-			left = new Point(current.x-1, current.y);
-			up = new Point(current.x, current.y-1);
-			leftColor = ImageReader.getColor(imageData.getRGB(left.x, left.y));
-			upColor = ImageReader.getColor(imageData.getRGB(up.x, up.y));
+			previous = current;
+			current = nextPixel(fieldType, current);
 		}
 		
-		return current;
+		return previous;
 	}
 	
+	private Point nextPixel(FieldType fieldType, Point current)
+	{
+		Point[] pixels = new Point[4];
+		
+		pixels[0] = new Point(current.x-1, current.y);
+		pixels[1] = new Point(current.x-1, current.y-1);
+		pixels[2] = new Point(current.x, current.y-1);
+		pixels[3] = new Point(current.x+1, current.y-1);
+		
+		Color[] colors = new Color[pixels.length];
+
+		ImageReader.getColor(imageData.getRGB(pixels[2].x, pixels[2].y));
+			
+		
+		for(int i = 0; i < colors.length; i++)
+		{
+			final Color color = ImageReader.getColor(imageData.getRGB(pixels[i].x, pixels[i].y));
+			if(fieldType.hasColor(color))
+				return pixels[i];
+		}
+		
+		return null;
+	}
+
 	public List<Point> findRandomPixelInEachField(int numberOfFields, FieldType fieldType)
 	{
 		Set<Point> checkedPixels = new HashSet<Point>();
