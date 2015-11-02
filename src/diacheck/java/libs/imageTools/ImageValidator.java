@@ -21,8 +21,8 @@ public class ImageValidator
 
 	/**
 	 * 
-	 * @return a double value between 0 and 1, where 0 indicates no
-	 *         noise at all and 1 the maximum amount of possible noise.
+	 * @return a double value between 0 and 1, where 0 indicates no noise at all
+	 *         and 1 the maximum amount of possible noise.
 	 */
 	public double getNoiseLevel()
 	{
@@ -35,7 +35,7 @@ public class ImageValidator
 		{
 			for(int x = y % 4 + 1; x < height; x += 5)
 			{
-				if(!outOfBounds(x + 1, y + 1, width, height))
+				if(!outOfBounds(x + 1, y + 1))
 				{
 
 					noise += getNoiseLevelForPixelCluster(x, y);
@@ -63,7 +63,8 @@ public class ImageValidator
 		Color previousPixel = ImageReader.getColor(cluster[0]);
 		for(int i = 1; i < 9; i++)
 		{
-			//TODO this may be optimized by using bit manipulation and not class Color.
+			// TODO this may be optimized by using bit manipulation and not
+			// class Color.
 			Color currentPixel = ImageReader.getColor(cluster[i]);
 
 			diffSum += getChannelsDifference(currentPixel, previousPixel) / (255 * 3);
@@ -92,9 +93,9 @@ public class ImageValidator
 
 	/**
 	 * 
-	 * @return a <code>double</code> value between 0 and 1, where 0
-	 *         indicates no overexposed pixels and 1 that all pixels in the
-	 *         image are overexposed.
+	 * @return a <code>double</code> value between 0 and 1, where 0 indicates no
+	 *         overexposed pixels and 1 that all pixels in the image are
+	 *         overexposed.
 	 */
 	public double getOverexposureRatio()
 	{
@@ -110,7 +111,7 @@ public class ImageValidator
 			for(int x = y % 4; x < height; x += 4)
 			{
 				int currentPixel = 0;
-				if(outOfBounds(x, y, width, height))
+				if(outOfBounds(x, y))
 					currentPixel = sample.getRGB(width, y);
 				else
 					currentPixel = sample.getRGB(x, y);
@@ -126,9 +127,9 @@ public class ImageValidator
 
 	/**
 	 * 
-	 * @return a <code>double</code> value between 0 and 1, where 0
-	 *         indicates no underexposed pixels and 1 that all pixels in the
-	 *         image are underexposed.
+	 * @return a <code>double</code> value between 0 and 1, where 0 indicates no
+	 *         underexposed pixels and 1 that all pixels in the image are
+	 *         underexposed.
 	 */
 	public double getUnderexposureRatio()
 	{
@@ -144,7 +145,7 @@ public class ImageValidator
 			for(int x = y % 4; x < height; x += 4)
 			{
 				int currentPixel = 0;
-				if(outOfBounds(x, y, width, height))
+				if(outOfBounds(x, y))
 					currentPixel = sample.getRGB(width, y);
 				else
 					currentPixel = sample.getRGB(x, y);
@@ -160,8 +161,8 @@ public class ImageValidator
 
 	/**
 	 * 
-	 * @return the average exposure for the pixels in the image, ranging
-	 *         from 0 to 255.
+	 * @return the average exposure for the pixels in the image, ranging from 0
+	 *         to 255.
 	 */
 	public float getAverageExposure()
 	{
@@ -170,15 +171,11 @@ public class ImageValidator
 		double totalExposure = 0;
 		int checkedPixels = 0;
 
-		for(int y = 0; y < width; y++)
+		for(int y = 0; y < height; y++)
 		{
-			for(int x = y % 4; x < height; x += 4)
+			for(int x = y % 4; x < width; x += 4)
 			{
-				int currentPixel = 0;
-				if(outOfBounds(x, y, width, height))
-					currentPixel = sample.getRGB(width, y);
-				else
-					currentPixel = sample.getRGB(x, y);
+				final int currentPixel = getCurrentPixel(x, y);
 
 				totalExposure += getExposure(currentPixel);
 				checkedPixels++;
@@ -186,6 +183,20 @@ public class ImageValidator
 		}
 
 		return (float) (totalExposure / checkedPixels);
+	}
+
+	private int getCurrentPixel(int x, int y)
+	{
+		try
+		{
+			if(outOfBounds(x, y))
+				return sample.getRGB(sample.getWidth() - 1, y);
+			return sample.getRGB(x, y);
+		}
+		catch(ArrayIndexOutOfBoundsException exception)
+		{
+			throw new ArrayIndexOutOfBoundsException(exception.getMessage() + " (" + x + ", " + y + ")");
+		}
 	}
 
 	private float getExposure(int currentPixel)
@@ -197,8 +208,8 @@ public class ImageValidator
 		return pixelExposure / 3;
 	}
 
-	private boolean outOfBounds(int x, int y, int width, int height)
+	private boolean outOfBounds(int x, int y)
 	{
-		return x >= width || y >= height;
+		return x >= sample.getWidth() || y >= sample.getHeight();
 	}
 }
