@@ -60,12 +60,12 @@ public class ImageValidator
 		cluster[6] = sample.getRGB(x - 1, y + 1);
 		cluster[7] = sample.getRGB(x, y + 1);
 		cluster[8] = sample.getRGB(x + 1, y + 1);
-		Color previousPixel = ImageReader.getColor(cluster[0]);
+		Color previousPixel = ColorConverter.getColor(cluster[0]);
 		for(int i = 1; i < 9; i++)
 		{
 			// TODO this may be optimized by using bit manipulation and not
 			// class Color.
-			Color currentPixel = ImageReader.getColor(cluster[i]);
+			Color currentPixel = ColorConverter.getColor(cluster[i]);
 
 			diffSum += getChannelsDifference(currentPixel, previousPixel) / (255 * 3);
 			previousPixel = currentPixel;
@@ -201,7 +201,7 @@ public class ImageValidator
 
 	private float getExposure(int currentPixel)
 	{
-		Color color = ImageReader.getColor(currentPixel);
+		Color color = ColorConverter.getColor(currentPixel);
 		int pixelExposure = color.getRed();
 		pixelExposure += color.getGreen();
 		pixelExposure += color.getBlue();

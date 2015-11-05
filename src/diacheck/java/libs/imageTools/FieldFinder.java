@@ -25,12 +25,16 @@ public class FieldFinder
 {
 	private final BufferedImage imageData;
 	private final Color whiteBalance;
+	private final Set<Point> edges;
+	private final int maxFieldSize;
 	public final static int RIGTH = 1;
 	public final static int LEFT = -1;
 	
-	public FieldFinder(BufferedImage image)
+	public FieldFinder(BufferedImage image) throws IOException
 	{
 		this.imageData = image;
+		maxFieldSize = (image.getHeight() * image.getWidth())/5000;
+		this.edges = new EdgeDetector(image).findEdges();
 		this.whiteBalance = analyzeWhiteBalance();
 	}
 	
@@ -63,17 +67,18 @@ public class FieldFinder
 	{
 		List<Color> foundColors = new ArrayList<Color>();
 		
-		Point start = findFirstPixelOfField(fieldType, point);
+		Point start = findFirstPixelOfField(point);
 		
 		int y = start.y;
 		int x = start.x;
 		int direction = RIGTH;
 		int searchedPixelsWithNoMatch = 0;
 	
-		while(searchedPixelsWithNoMatch < 5)
+		while(searchedPixelsWithNoMatch < 3)
 		{		
-			Color colorForCurrentPixel = ImageReader.getColor(imageData.getRGB(x, y));
-			if(fieldType.hasColor(colorForCurrentPixel))
+			Color colorForCurrentPixel = ColorConverter.getColor(imageData.getRGB(x, y));
+			final Point currentPoint = new Point(x, y);
+			if(!edges.contains(currentPoint))
 			{
 				searchedPixelsWithNoMatch = 0;
 				foundColors.add(colorForCurrentPixel);
@@ -85,6 +90,7 @@ public class FieldFinder
 				searchedPixelsWithNoMatch++;
 			}
 			x += direction;
+			assert foundColors.size() < maxFieldSize;
 		}
 		if(fieldType != FieldType.WHITE_BALANCE)
 			foundColors = whiteBalanceCompensation(foundColors);
@@ -111,10 +117,10 @@ public class FieldFinder
 		final int x = fieldType.getX(imageData.getWidth());
 		final int y = fieldType.getY(imageData.getHeight());
 		final Point fieldCenter = new Point(x, y);
-		return  findFirstPixelOfField(fieldType, fieldCenter);
+		return  findFirstPixelOfField(fieldCenter);
 	}
 	
-	public Point findFirstPixelOfField(FieldType fieldType, Point start)
+	public Point findFirstPixelOfField(Point start)
 	{
 		Point current, previous;
 		current = previous = start;
@@ -122,16 +128,16 @@ public class FieldFinder
 		while(current != null)
 		{	
 			if(hasReachedEdgeOfImage(current))
-				throw new IllegalStateException("Reached end of image when looking for first pixel of field for " + fieldType);
+				throw new IllegalStateException("Reached end of image when looking for first pixel of field.");
 			
 			previous = current;
-			current = nextPixel(fieldType, current);
+			current = nextPixel(current);
 		}
 		
 		return previous;
 	}
 	
-	private Point nextPixel(FieldType fieldType, Point current)
+	private Point nextPixel(Point current)
 	{
 		Point[] pixels = new Point[4];
 		
@@ -139,18 +145,10 @@ public class FieldFinder
 		pixels[1] = new Point(current.x-1, current.y-1);
 		pixels[2] = new Point(current.x, current.y-1);
 		pixels[3] = new Point(current.x+1, current.y-1);
-		
-		Color[] colors = new Color[pixels.length];
 
-		ImageReader.getColor(imageData.getRGB(pixels[2].x, pixels[2].y));
-			
-		
-		for(int i = 0; i < colors.length; i++)
-		{
-			final Color color = ImageReader.getColor(imageData.getRGB(pixels[i].x, pixels[i].y));
-			if(fieldType.hasColor(color))
+		for(int i = 0; i < pixels.length; i++)
+			if(!edges.contains(pixels[i]))
 				return pixels[i];
-		}
 		
 		return null;
 	}
@@ -175,7 +173,7 @@ public class FieldFinder
 		{
 			Point currentPixel = new Point(x, y);
 			checkedPixels.add(currentPixel);
-			Color pixelColor = ImageReader.getColor(imageData.getRGB(x, y));
+			Color pixelColor = ColorConverter.getColor(imageData.getRGB(x, y));
 			if(fieldType.hasColor(pixelColor))
 			{
 				boolean pixelBelongsToAlreadyFoundField = false;

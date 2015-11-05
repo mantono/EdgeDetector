@@ -3,6 +3,7 @@ package diacheck.java.libs.imageTools;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -26,8 +27,9 @@ public class ControlFieldReader
 	/**
 	 * 
 	 * @param imageData Takes a <code>BufferedImage</code> instance of the sample image.
+	 * @throws IOException 
 	 */
-	public ControlFieldReader(BufferedImage imageData)
+	public ControlFieldReader(BufferedImage imageData) throws IOException
 	{
 		fields = new FieldFinder(imageData);
 		findControlFields();
@@ -106,9 +108,9 @@ public class ControlFieldReader
 	{
 		final Point[] controlFieldPositions = new Point[3];
 		List<Point> pixelsFromFields = fields.findRandomPixelInEachField(3, FieldType.CONTROL);
-		controlFieldPositions[0] = fields.findFirstPixelOfField(FieldType.CONTROL, pixelsFromFields.get(0)); 
-		controlFieldPositions[1] = fields.findFirstPixelOfField(FieldType.CONTROL, pixelsFromFields.get(1));
-		controlFieldPositions[2] = fields.findFirstPixelOfField(FieldType.CONTROL, pixelsFromFields.get(2));
+		controlFieldPositions[0] = fields.findFirstPixelOfField(pixelsFromFields.get(0)); 
+		controlFieldPositions[1] = fields.findFirstPixelOfField(pixelsFromFields.get(1));
+		controlFieldPositions[2] = fields.findFirstPixelOfField(pixelsFromFields.get(2));
 		return controlFieldPositions;
 	}
 	
