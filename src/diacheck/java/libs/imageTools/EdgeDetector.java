@@ -1,5 +1,6 @@
 package diacheck.java.libs.imageTools;
 
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -9,13 +10,73 @@ import java.util.Set;
 public class EdgeDetector
 {
 	private final BufferedImage imageData;
+	private final short threshold;
 	
 	public EdgeDetector(BufferedImage image)
 	{
 		this.imageData = image;
+		float contrastFactor = calculateContrast();
+		this.threshold = (short) (30*contrastFactor);
+	}
+	
+	public EdgeDetector(BufferedImage image, final int threshold)
+	{
+		this.imageData = image;
+		this.threshold = (short) threshold;
+	}
+	
+	public float calculateContrast()
+	{
+		//TODO Read and analyze the contrast in the image and calculate a contrast factor for more accurate edge detection.
+		final int width = imageData.getWidth() - 1;
+		final int height = imageData.getHeight() - 1;
+		int darkSum, darkPixels, brightSum, brightPixels;
+		darkPixels = brightPixels = darkSum = brightSum = 0;
+		final short contrastThreshold = Byte.MAX_VALUE;
+		for(int y = 0; y < height; y++)
+		{
+			for(int x = 0; x < width; x++)
+			{
+				short sum = getBrightnessForPixel(x, y);
+				if(sum > contrastThreshold)
+				{
+					brightSum += sum - contrastThreshold -1;
+					brightPixels++;
+				}
+				else
+				{
+					darkSum += contrastThreshold - sum;
+					darkPixels++;
+				}
+			}
+		}
+		
+		final float averageBrightPixelValue = brightSum/(float) brightPixels;
+		final float averageDarkPixelValue = darkSum/(float) darkPixels;
+		
+		if(brightPixels == 0 || darkPixels == 0)
+			return 0;
+		
+		final float contrast = (averageBrightPixelValue*averageDarkPixelValue)/(127f*127f);
+		
+		return contrast;
 	}
 	
 	
+	private short getBrightnessForPixel(int x, int y)
+	{
+		final Color color = ColorConverter.getColor(imageData.getRGB(x, y));
+		int maxValue = 0;
+		if(color.getRed() > maxValue)
+			maxValue = color.getRed();
+		if(color.getGreen() > maxValue)
+			maxValue = color.getGreen();
+		if(color.getBlue() > maxValue)
+			maxValue = color.getBlue();
+		
+		return (short) maxValue;
+	}
+
 	/**
 	 * This method locates all pixel coordinates which makes up the "edges" in the image. It compares to pixel at a time with the {@link #isEdge(int, int) isEdge}-method.
 	 * @return a set containing the Point for each pixel that is considered to be an edge in the image.
@@ -23,10 +84,13 @@ public class EdgeDetector
 	 */
 	public Set<Point> findEdges() throws IOException
 	{
-		final int distance = 4;
 		Set<Point> edges = new HashSet<Point>();
 		final int width = imageData.getWidth() - 2;
 		final int height = imageData.getHeight() - 2;
+		
+		final int resolution = width*height;
+		final byte distance = (byte) (2 + Math.log10(resolution));
+		
 		for(int y = distance; y < height; y += 2)
 		{
 			for(int x = distance; x < width; x += 2)
@@ -64,12 +128,11 @@ public class EdgeDetector
 	 * Compares the individual color channels for each pixels color and the sum for of all differences for all three color channels.  
 	 * @param pixel1 first pixel
 	 * @param pixel2 second pixel
-	 * @return true if the difference one a single color channels is greater than 35, or if the sum of all color channels differences is greater than 70.
+	 * @return true if the difference one a single color channels is greater than the threshold value, or if the sum of all color channels differences is greater than two times the threshold value.
 	 * If not, it will return false.
 	 */
-	public static boolean isEdge(int pixel1, int pixel2)
+	public boolean isEdge(int pixel1, int pixel2)
 	{
-		final int threshold = 35;
 		final int diffRed = Math.abs(ColorConverter.getRed(pixel1) - ColorConverter.getRed(pixel2));
 		if(diffRed > threshold)
 			return true;
