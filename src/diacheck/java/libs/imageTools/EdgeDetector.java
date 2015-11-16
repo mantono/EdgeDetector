@@ -16,7 +16,7 @@ public class EdgeDetector
 	{
 		this.imageData = image;
 		float contrastFactor = calculateContrast();
-		this.threshold = (short) (30*contrastFactor);
+		this.threshold = (short) (135*contrastFactor);
 	}
 	
 	public EdgeDetector(BufferedImage image, final int threshold)
@@ -27,42 +27,41 @@ public class EdgeDetector
 	
 	public float calculateContrast()
 	{
-		//TODO Read and analyze the contrast in the image and calculate a contrast factor for more accurate edge detection.
-		final int width = imageData.getWidth() - 1;
-		final int height = imageData.getHeight() - 1;
-		int darkSum, darkPixels, brightSum, brightPixels;
-		darkPixels = brightPixels = darkSum = brightSum = 0;
-		final short contrastThreshold = Byte.MAX_VALUE;
-		for(int y = 0; y < height; y++)
+		final int width = imageData.getWidth() - 2;
+		final int height = imageData.getHeight() - 2;
+	
+		final short averageBrightness = getAverageBrightness();
+		int diffFromAverage = 0;
+		int checkedPixels = 0;
+		
+		for(int y = 0; y < height; y+=2)
 		{
-			for(int x = 0; x < width; x++)
+			for(int x = 0; x < width; x+=2)
 			{
-				short sum = getBrightnessForPixel(x, y);
-				if(sum > contrastThreshold)
-				{
-					brightSum += sum - contrastThreshold -1;
-					brightPixels++;
-				}
-				else
-				{
-					darkSum += contrastThreshold - sum;
-					darkPixels++;
-				}
+				checkedPixels++;
+				diffFromAverage += Math.abs(averageBrightness - getBrightnessForPixel(x, y));
 			}
 		}
+
+		final float contrast = diffFromAverage/checkedPixels;
 		
-		final float averageBrightPixelValue = brightSum/(float) brightPixels;
-		final float averageDarkPixelValue = darkSum/(float) darkPixels;
-		
-		if(brightPixels == 0 || darkPixels == 0)
-			return 0;
-		
-		final float contrast = (averageBrightPixelValue*averageDarkPixelValue)/(127f*127f);
-		
-		return contrast;
+		return contrast/127;
 	}
 	
 	
+	private short getAverageBrightness()
+	{
+		final int width = imageData.getWidth() - 1;
+		final int height = imageData.getHeight() - 1;
+		int brightness = 0 ;
+		
+		for(int y = 0; y < height; y++)
+			for(int x = 0; x < width; x++)
+				brightness += getBrightnessForPixel(x, y);
+		
+		return (short) (brightness/(width*height));
+	}
+
 	private short getBrightnessForPixel(int x, int y)
 	{
 		final Color color = ColorConverter.getColor(imageData.getRGB(x, y));
