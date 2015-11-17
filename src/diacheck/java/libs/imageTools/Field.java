@@ -21,7 +21,7 @@ public class Field
 {
 	// private final BufferedImage imageData;
 	private final Rectangle fieldBounds;
-	//private final WhiteBalance whiteBalance;
+	// private final WhiteBalance whiteBalance;
 	// private final Raster raster;
 	private final int imageWidth;
 	private final byte pixelByteSize;
@@ -39,7 +39,7 @@ public class Field
 	{
 		// this.imageData = imageData;
 		this.fieldBounds = fieldBounds;
-		//this.whiteBalance = whiteBalance;
+		// this.whiteBalance = whiteBalance;
 		this.imageWidth = fieldBounds.width;
 		// this.raster = imageData.getData(fieldBounds);
 		if(imageData.getAlphaRaster() != null)
@@ -58,9 +58,9 @@ public class Field
 	 */
 	public int getAmountOfPixels()
 	{
-		return pixels.length/pixelByteSize;
+		return pixels.length / pixelByteSize;
 	}
-	
+
 	/**
 	 * 
 	 * @return returns a <code>Color</code> object, representing the average
@@ -68,29 +68,25 @@ public class Field
 	 */
 	public Color getAverageColor()
 	{
-		
 
 		int red, green, blue;
 		red = green = blue = 0;
-		final int lastX = (int) fieldBounds.getWidth();
-		final int lastY = (int) fieldBounds.getHeight();
-		for(int y = 0; y < lastY; y++)
+
+		final int amountOfPixels = pixels.length/pixelByteSize;
+		for(int i = 0; i < amountOfPixels; i++)
 		{
-			for(int x = 0; x < lastX; x++)
-			{
-				final int pixel = getPixel(x, y); 
-				red += ColorConverter.getRed(pixel);
-				green += ColorConverter.getGreen(pixel);
-				blue += ColorConverter.getBlue(pixel);
-			}
+			final int pixel = getPixel(i);
+			red += ColorConverter.getRed(pixel);
+			green += ColorConverter.getGreen(pixel);
+			blue += ColorConverter.getBlue(pixel);
 		}
-		red /= pixels.length;
-		green /= pixels.length;
-		blue /= pixels.length;
+		red /= amountOfPixels;
+		green /= amountOfPixels;
+		blue /= amountOfPixels;
 
 		return new Color(red, green, blue);
 	}
-	
+
 	public int getPixel(final int x, final int y)
 	{
 		int index = (y * pixelByteSize * imageWidth) + (x * pixelByteSize);
@@ -100,10 +96,10 @@ public class Field
 		pixel += ((int) pixels[index++] & 0xff) << 16;
 		pixel += ((int) pixels[index++] & 0xff) << 8;
 		pixel += ((int) pixels[index] & 0xff);
-		
+
 		return pixel;
 	}
-	
+
 	public int getPixel(final int i)
 	{
 		int index = (i * pixelByteSize);
@@ -113,7 +109,7 @@ public class Field
 		pixel += ((int) pixels[index++] & 0xff) << 16;
 		pixel += ((int) pixels[index++] & 0xff) << 8;
 		pixel += ((int) pixels[index] & 0xff);
-		
+
 		return pixel;
 	}
 }
