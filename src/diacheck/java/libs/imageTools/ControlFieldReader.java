@@ -1,14 +1,9 @@
 package diacheck.java.libs.imageTools;
 
-import java.awt.Color;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
 import diacheck.java.libs.imageTools.FieldFinder;
 import diacheck.java.libs.Triangle;
 /**
@@ -108,9 +103,9 @@ public class ControlFieldReader
 	{
 		final Point[] controlFieldPositions = new Point[3];
 		List<Point> pixelsFromFields = fields.findRandomPixelInEachField(3, FieldType.CONTROL);
-		controlFieldPositions[0] = fields.findFirstPixelOfField(pixelsFromFields.get(0)); 
-		controlFieldPositions[1] = fields.findFirstPixelOfField(pixelsFromFields.get(1));
-		controlFieldPositions[2] = fields.findFirstPixelOfField(pixelsFromFields.get(2));
+		controlFieldPositions[0] = fields.findEdgeOfField(pixelsFromFields.get(0), FieldFinder.UP); 
+		controlFieldPositions[1] = fields.findEdgeOfField(pixelsFromFields.get(1), FieldFinder.UP);
+		controlFieldPositions[2] = fields.findEdgeOfField(pixelsFromFields.get(2), FieldFinder.UP);
 		return controlFieldPositions;
 	}
 	

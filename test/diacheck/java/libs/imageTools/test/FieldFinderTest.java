@@ -32,13 +32,6 @@ public class FieldFinderTest
 	}
 
 	@Test
-	public void testFindFirstPixelOfFieldForWhiteBalance() throws IOException
-	{
-		final Point foundPixel = fieldFinder.findFirstPixelOfField(FieldType.WHITE_BALANCE);
-		assertEquals(new Point(1522, 894), foundPixel);
-	}
-
-	@Test
 	public void testFindRandomPixelsInControlField()
 	{
 		List<Point> pixelsInControlFields = fieldFinder.findRandomPixelInEachField(3, FieldType.CONTROL);
@@ -176,7 +169,7 @@ public class FieldFinderTest
 		Field fieldData = fieldFinder.locateField(field);
 
 		assertTrue(fieldData != null);
-		assertTrue(fieldData.getAmountOfPixels() > 0);
+		assertTrue(fieldData.getAmountOfPixels() > 500);
 		
 		final Color foundColor = fieldData.getAverageColor();
 		assertTrue("Found color " + foundColor + " is not acceptable for this type of field.", field.hasColor(foundColor));

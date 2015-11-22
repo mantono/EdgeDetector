@@ -11,6 +11,9 @@ import java.util.Set;
 
 import javax.imageio.ImageIO;
 
+import diacheck.java.libs.analytes.Analyte;
+import diacheck.java.libs.analytes.Glucose;
+
 /**
  * 
  * @author Anton &Ouml;sterberg
@@ -23,9 +26,9 @@ import javax.imageio.ImageIO;
 public class ImageReader
 {
 	private final File imageFile;
-	private final Color whiteBalance;
 	private final BufferedImage imageData;
 	private final FieldFinder fields;
+	private final WhiteBalance whiteBalance;
 
 	/**
 	 * 
@@ -48,26 +51,33 @@ public class ImageReader
 			throw new BadExposureException(qualityControl.getUnderexposureRatio());
 		
 		fields = new FieldFinder(imageData);
-		whiteBalance = fields.getWhiteBalance();
-		checkWhiteBalance();
+		this.whiteBalance = new WhiteBalance(analyzeWhiteBalance());
+		whiteBalance.isWithinBounds();
 	}
 	
-	private void checkWhiteBalance()
+	private Color analyzeWhiteBalance()
 	{
-		final int red = whiteBalance.getRed();
-		final int green = whiteBalance.getGreen();
-		final int blue = whiteBalance.getBlue();
-		
-		final short min = 110;
-		final short max = 240;
-		
-		if(red < min || red > max)
-			throw new WhiteBalanceException("Red channel is unbalanced: " + red);
-		if(green < min || green > max)
-			throw new WhiteBalanceException("Green channel is unbalanced: " + green);
-		if(blue < min || blue > max)
-			throw new WhiteBalanceException("Blue channel is unbalanced: " + blue);
-		
+		try
+		{
+			return fields.locateField(FieldType.WHITE_BALANCE).getAverageColor();
+		}
+		catch(IllegalArgumentException exception)
+		{
+			throw new WhiteBalanceException("Could not find white balance field. This can be because of bad color balance in image");
+		}
+	}
+	
+	public Analyte createAnalyte(FieldType fieldType)
+	{
+		switch(fieldType)
+		{
+			case GLUCOSE: return new Glucose(fields.locateField(fieldType));
+			case KETONES: return new Glucose(fields.locateField(fieldType));
+			case PH: return new Glucose(fields.locateField(fieldType));
+			case PROTEIN: return new Glucose(fields.locateField(fieldType));
+			case SPECIFIC_GRAVITY: return new Glucose(fields.locateField(fieldType));
+			default: return null;
+		}
 	}
 	
 	/**

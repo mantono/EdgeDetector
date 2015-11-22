@@ -75,10 +75,12 @@ public class Field
 		final int amountOfPixels = pixels.length/pixelByteSize;
 		for(int i = 0; i < amountOfPixels; i++)
 		{
-			final int pixel = getPixel(i);
-			red += ColorConverter.getRed(pixel);
-			green += ColorConverter.getGreen(pixel);
-			blue += ColorConverter.getBlue(pixel);
+			int index = (i * pixelByteSize);
+			if(pixelByteSize == 4)
+				index++;
+			red += ((int) pixels[index++] & 0xff);
+			green += ((int) pixels[index++] & 0xff);
+			blue += ((int) pixels[index] & 0xff);
 		}
 		red /= amountOfPixels;
 		green /= amountOfPixels;

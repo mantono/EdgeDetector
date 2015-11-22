@@ -106,15 +106,22 @@ public class ImageValidator
 		int overexposedPixels = 0;
 		int checkedPixels = 0;
 
-		for(int y = 0; y < width; y++)
+		for(int y = 0; y < height; y++)
 		{
-			for(int x = y % 4; x < height; x += 4)
+			for(int x = y % 4; x < width; x += 4)
 			{
 				int currentPixel = 0;
+				try
+				{
 				if(outOfBounds(x, y))
-					currentPixel = sample.getRGB(width, y);
+					currentPixel = sample.getRGB(width-1, y);
 				else
 					currentPixel = sample.getRGB(x, y);
+				}
+				catch(ArrayIndexOutOfBoundsException e)
+				{
+					throw new ArrayIndexOutOfBoundsException(e.getMessage() + "\nx: " + x + ", image width: " + width + "\ny: " + y + ", image height: " + height);
+				}
 
 				if(getExposure(currentPixel) >= overexposedThreshold)
 					overexposedPixels++;
@@ -140,9 +147,9 @@ public class ImageValidator
 		int underexposedPixels = 0;
 		int checkedPixels = 0;
 
-		for(int y = 0; y < width; y++)
+		for(int y = 0; y < height; y++)
 		{
-			for(int x = y % 4; x < height; x += 4)
+			for(int x = y % 4; x < width; x += 4)
 			{
 				int currentPixel = 0;
 				if(outOfBounds(x, y))

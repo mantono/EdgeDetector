@@ -26,7 +26,7 @@ public class EdgeDetectorTest
 	}
 
 	@Test
-	public void testFindEdgesOnRealPhoto() throws IOException
+	public void testFindEdgesOnRealPhoto1() throws IOException
 	{
 		final File file = new File("test/images/edgeTest.png");
 		BufferedImage image = ImageIO.read(file);
@@ -42,6 +42,22 @@ public class EdgeDetectorTest
 		assertFalse(edges.contains(new Point(645, 125)));
 		assertFalse(edges.contains(new Point(617, 126)));
 		assertFalse(edges.contains(new Point(284, 116)));
+	}
+	
+	@Test
+	public void testFindEdgesOnRealPhoto2() throws IOException
+	{
+		final File file = new File("test/images/GOOD_horizontal_and_cropped.png");
+		BufferedImage image = ImageIO.read(file);
+		EdgeDetector edgeFinder = new EdgeDetector(image);
+		final Set<Point> edges = edgeFinder.findEdges();
+		makeEdgesBlue(file, edges);
+		
+		assertTrue(edges.contains(new Point(1851, 607)));
+
+		assertFalse(edges.contains(new Point(284, 116)));
+		assertFalse(edges.contains(new Point(1858, 638)));
+		assertFalse(edges.contains(new Point(1976, 648)));
 	}
 	
 	@Test

@@ -1,8 +1,11 @@
 package diacheck.java.libs.imageTools;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.awt.image.Raster;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,36 +27,19 @@ import diacheck.java.libs.imageTools.ImageReader;
 public class FieldFinder
 {
 	private final BufferedImage imageData;
-	private final Color whiteBalance;
 	private final Set<Point> edges;
-	private final int maxFieldSize;
-	public final static int RIGTH = 1;
+	public final static int RIGHT = 1;
+	public final static int DOWN = 1;
 	public final static int LEFT = -1;
+	public final static int UP = -1;
 	
 	public FieldFinder(BufferedImage image) throws IOException
 	{
 		this.imageData = image;
-		maxFieldSize = (image.getHeight() * image.getWidth())/5000;
 		this.edges = new EdgeDetector(image).findEdges();
-		this.whiteBalance = analyzeWhiteBalance();
 	}
 	
-	private Color analyzeWhiteBalance()
-	{
-		try
-		{
-			return locateField(FieldType.WHITE_BALANCE).getAverageColor();
-		}
-		catch(IllegalArgumentException exception)
-		{
-			throw new WhiteBalanceException("Could not find white balance field. This can be because of bad color balance in image");
-		}
-	}
 	
-	public Color getWhiteBalance()
-	{
-		return whiteBalance;
-	}
 	
 	public Field locateField(FieldType fieldType)
 	{
@@ -65,62 +51,16 @@ public class FieldFinder
 	
 	private Field findRestOfField(FieldType fieldType, Point point)
 	{
-		List<Color> foundColors = new ArrayList<Color>();
+		Point start = findEdgeOfField(point, UP);
+		Point end = findEdgeOfField(point, DOWN);
 		
-		Point start = findFirstPixelOfField(point);
-		
-		int y = start.y;
-		int x = start.x;
-		int direction = RIGTH;
-		int searchedPixelsWithNoMatch = 0;
+		Dimension dimension = new Dimension(end.x - start.x, end.y - start.y);
+		Rectangle fieldArea = new Rectangle(start, dimension);
 	
-		while(searchedPixelsWithNoMatch < 3)
-		{		
-			Color colorForCurrentPixel = ColorConverter.getColor(imageData.getRGB(x, y));
-			final Point currentPoint = new Point(x, y);
-			if(!edges.contains(currentPoint))
-			{
-				searchedPixelsWithNoMatch = 0;
-				foundColors.add(colorForCurrentPixel);
-			}
-			else
-			{
-				direction /= -1;
-				y++;
-				searchedPixelsWithNoMatch++;
-			}
-			x += direction;
-			assert foundColors.size() < maxFieldSize;
-		}
-		if(fieldType != FieldType.WHITE_BALANCE)
-			foundColors = whiteBalanceCompensation(foundColors);
-		return new Field(fieldType, foundColors);
-	}
-	
-	public List<Color> whiteBalanceCompensation(List<Color> foundColors)
-	{
-		List<Color> newColors = new ArrayList<Color>(foundColors.size());
-		for(Color color : foundColors)
-			newColors.add(whiteBalanceCompensation(color));
-		return newColors;
-	}
-	
-	public Color whiteBalanceCompensation(Color averageColor)
-	{
-		final int redGreenDiff = whiteBalance.getGreen() - whiteBalance.getRed();
-		final int blueGreenDiff = whiteBalance.getGreen() - whiteBalance.getBlue();
-		return new Color(averageColor.getRed() + redGreenDiff, averageColor.getGreen(), averageColor.getBlue() + blueGreenDiff);
+		return new Field(imageData, fieldArea);
 	}
 
-	public Point findFirstPixelOfField(FieldType fieldType)
-	{
-		final int x = fieldType.getX(imageData.getWidth());
-		final int y = fieldType.getY(imageData.getHeight());
-		final Point fieldCenter = new Point(x, y);
-		return  findFirstPixelOfField(fieldCenter);
-	}
-	
-	public Point findFirstPixelOfField(Point start)
+	public Point findEdgeOfField(Point start, final int direction)
 	{
 		Point current, previous;
 		current = previous = start;
@@ -131,20 +71,26 @@ public class FieldFinder
 				throw new IllegalStateException("Reached end of image when looking for first pixel of field.");
 			
 			previous = current;
-			current = nextPixel(current);
+			current = nextPixel(current, direction);
 		}
 		
 		return previous;
 	}
 	
-	private Point nextPixel(Point current)
+	private Point nextPixel(Point current, final int direction)
 	{
-		Point[] pixels = new Point[4];
+		Point[] pixels = new Point[7];
 		
-		pixels[0] = new Point(current.x-1, current.y);
-		pixels[1] = new Point(current.x-1, current.y-1);
-		pixels[2] = new Point(current.x, current.y-1);
-		pixels[3] = new Point(current.x+1, current.y-1);
+		if(direction == LEFT)
+			pixels[0] = new Point(current.x+LEFT, current.y);
+		else
+			pixels[0] = new Point(current.x+RIGHT, current.y);
+		pixels[1] = new Point(current.x+LEFT, current.y+direction);
+		pixels[2] = new Point(current.x, current.y+direction);
+		pixels[3] = new Point(current.x+RIGHT, current.y+direction);
+		pixels[4] = new Point(current.x+LEFT, current.y+direction*2);
+		pixels[5] = new Point(current.x, current.y+direction*2);
+		pixels[6] = new Point(current.x+RIGHT, current.y+direction*2);
 
 		for(int i = 0; i < pixels.length; i++)
 			if(!edges.contains(pixels[i]))
