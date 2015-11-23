@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -62,7 +63,7 @@ public class EdgeDetector
 		return (short) (brightness / (width * height));
 	}
 
-	private short getMaxBrightnessForPixel(int x, int y)
+	protected short getMaxBrightnessForPixel(int x, int y)
 	{
 		final Color color = ColorConverter.getColor(imageData.getRGB(x, y));
 		int maxValue = 0;
@@ -75,15 +76,15 @@ public class EdgeDetector
 
 		return (short) maxValue;
 	}
-	
+
 	private short getAverageBrightnessForPixel(int x, int y)
 	{
 		final Color color = ColorConverter.getColor(imageData.getRGB(x, y));
 		int maxValue = color.getRed();
-			maxValue += color.getGreen();
-			maxValue += color.getBlue();
-		
-		return (short) (maxValue/3);
+		maxValue += color.getGreen();
+		maxValue += color.getBlue();
+
+		return (short) (maxValue / 3);
 	}
 
 	/**
@@ -95,25 +96,74 @@ public class EdgeDetector
 	 *         be an edge in the image.
 	 * @throws IOException
 	 */
-	
+
 	public Set<Point> findSobelEdges()
 	{
 		Set<Point> edges = new HashSet<Point>();
 		final int width = imageData.getWidth();
 		final int height = imageData.getHeight();
-		
-		for(int y = 1; y < height-1; y++)
+		final int resolution = width * height;
+		final byte distance = (byte) (Math.log10(resolution) + 1);
+		final double[] sobelValues = new double[resolution];
+		final double[] sobelAngles = new double[resolution];
+
+		for(int y = 0; y < height; y++)
 		{
-			for(int x = 1; x < width-1; x++)
+			for(int x = 0; x < width; x++)
 			{
+				final int index = y*width + x;
 				final Point point = new Point(x, y);
-				SobelSquare square = new SobelSquare(point);
+				SobelSquare square = new SobelSquare(imageData, point, distance);
+				sobelValues[index] = square.getSobelValue();
+				sobelAngles[index] = square.getAngle();
 			}
 		}
 		
+		final double maxValue = getMaxValue(sobelValues);
+		normalize(sobelValues, maxValue);
+		
+		for(int y = 0; y < height - distance - 1; y++)
+		{
+			for(int x = 0; x < width - distance - 1; x++)
+			{
+				final int index = y*width + x;
+				if(sobelValues[index] > 0.18 && isSharpEdge(sobelAngles[index]))
+					edges.add(new Point(x, y));
+			}
+		}
+		
+		fillGaps(edges);
+		smoothEdges(edges, 4);
+		smoothEdges(edges, 3);
+		smoothEdges(edges, 2);
+		smoothEdges(edges, 2);
+
 		return edges;
 	}
-	
+
+	private void normalize(double[] sobelValues, double maxValue)
+	{
+		for(int i = 0; i < sobelValues.length; i++)
+			sobelValues[i] /= maxValue;			
+	}
+
+	private double getMaxValue(double[] sobelValues)
+	{
+		double max = 0;
+		for(double d : sobelValues)
+			if(d > max)
+				max = d;
+		return max;
+	}
+
+	private boolean isSharpEdge(double angle)
+	{
+		final double divider = Math.PI/2;
+		final double orientation = angle % divider;
+		final double orientationDiff = Math.abs(orientation - divider);
+		return orientation < 0.8 || orientationDiff < 0.8;
+	}
+
 	public Set<Point> findEdges() throws IOException
 	{
 		Set<Point> edges = new HashSet<Point>();
@@ -157,7 +207,7 @@ public class EdgeDetector
 
 	private int numberOfAdjacentEdgePixels(Set<Point> edges, Point pixel)
 	{
-		Point[] pixels = new SobelSquare(pixel).getAdjacentPoints();
+		Point[] pixels = new SobelSquare(imageData, pixel, 1).getAdjacentPoints();
 		int matches = 0;
 		for(Point p : pixels)
 			if(edges.contains(p))
@@ -176,7 +226,7 @@ public class EdgeDetector
 		points.add(new Point(point.x, point.y + 1));
 		points.add(new Point(point.x - 1, point.y + 1));
 		points.add(new Point(point.x - 1, point.y));
-		
+
 		return points;
 	}
 

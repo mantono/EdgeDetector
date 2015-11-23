@@ -36,4 +36,13 @@ public class ColorConverter
 	{
 		return pixel & BLUEMASK;
 	}
+	
+	public static short getAverageBrightnessForPixel(final int color)
+	{
+		int maxValue = getRed(color);
+			maxValue += getGreen(color);
+			maxValue += getBlue(color);
+		
+		return (short) (maxValue/3);
+	}
 }

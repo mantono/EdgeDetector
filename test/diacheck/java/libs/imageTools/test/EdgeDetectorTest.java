@@ -26,6 +26,23 @@ public class EdgeDetectorTest
 	}
 
 	@Test
+	public void justCrunchAllImagesForComparison() throws IOException
+	{
+		findEdgesWithDifferentAlgorithmForFile(new File("test/images/edgeTest.png"));
+		findEdgesWithDifferentAlgorithmForFile(new File("test/images/edgeTest.png"));
+		findEdgesWithDifferentAlgorithmForFile(new File("test/images/GOOD_horizontal_and_cropped.png"));
+	}
+
+	private void findEdgesWithDifferentAlgorithmForFile(final File file) throws IOException
+	{
+		BufferedImage image = ImageIO.read(file);
+		EdgeDetector edgeFinder = new EdgeDetector(image);
+		Set<Point> edges1 = edgeFinder.findEdges();
+		Set<Point> edges2 = edgeFinder.findSobelEdges();
+		colorEdgesWithOverlay(file, edges1, edges2);
+	}
+
+	@Test
 	public void testFindEdgesOnRealPhoto1() throws IOException
 	{
 		final File file = new File("test/images/edgeTest.png");
@@ -43,7 +60,38 @@ public class EdgeDetectorTest
 		assertFalse(edges.contains(new Point(617, 126)));
 		assertFalse(edges.contains(new Point(284, 116)));
 	}
-	
+
+	@Test
+	public void testFindEdgesOnRealPhoto1WithSobelOperator() throws IOException
+	{
+		final File file = new File("test/images/edgeTest.png");
+		BufferedImage image = ImageIO.read(file);
+		EdgeDetector edgeFinder = new EdgeDetector(image);
+		final Set<Point> edges = edgeFinder.findSobelEdges();
+		makeEdgesBlue(file, edges);
+
+		assertTrue(edges.contains(new Point(212, 107)));
+		assertTrue(edges.contains(new Point(211, 95)));
+		assertTrue(edges.contains(new Point(160, 99)));
+		assertTrue(edges.contains(new Point(777, 140)));
+
+		assertFalse(edges.contains(new Point(645, 125)));
+		assertFalse(edges.contains(new Point(617, 126)));
+		assertFalse(edges.contains(new Point(284, 116)));
+	}
+
+	@Test
+	public void testFindEdgesOnBlackAndWhiteWithSobelOperator() throws IOException
+	{
+		final File file = new File("test/images/ImageValidator/black_and_white.png");
+		BufferedImage image = ImageIO.read(file);
+		EdgeDetector edgeFinder = new EdgeDetector(image);
+		final Set<Point> edges = edgeFinder.findSobelEdges();
+
+		assertTrue(edges.contains(new Point(200, 289)));
+		assertFalse(edges.contains(new Point(100, 289)));
+	}
+
 	@Test
 	public void testFindEdgesOnRealPhoto2() throws IOException
 	{
@@ -51,15 +99,14 @@ public class EdgeDetectorTest
 		BufferedImage image = ImageIO.read(file);
 		EdgeDetector edgeFinder = new EdgeDetector(image);
 		final Set<Point> edges = edgeFinder.findEdges();
-		makeEdgesBlue(file, edges);
-		
+
 		assertTrue(edges.contains(new Point(1851, 607)));
 
 		assertFalse(edges.contains(new Point(284, 116)));
 		assertFalse(edges.contains(new Point(1858, 638)));
 		assertFalse(edges.contains(new Point(1976, 648)));
 	}
-	
+
 	@Test
 	public void testCalculateContrastOnFullContrast1() throws IOException
 	{
@@ -68,7 +115,7 @@ public class EdgeDetectorTest
 		EdgeDetector edgeFinder = new EdgeDetector(image);
 		assertEquals(1f, edgeFinder.calculateContrast(), 0.0001);
 	}
-	
+
 	@Test
 	public void testCalculateContrastOnFullContrast2() throws IOException
 	{
@@ -77,7 +124,7 @@ public class EdgeDetectorTest
 		EdgeDetector edgeFinder = new EdgeDetector(image);
 		assertEquals(1f, edgeFinder.calculateContrast(), 0.0001);
 	}
-	
+
 	@Test
 	public void testCalculateContrastOnNoContrastBlack() throws IOException
 	{
@@ -86,7 +133,7 @@ public class EdgeDetectorTest
 		EdgeDetector edgeFinder = new EdgeDetector(image);
 		assertEquals(0f, edgeFinder.calculateContrast(), 0.0001);
 	}
-	
+
 	@Test
 	public void testCalculateContrastOnNoContrastBlue() throws IOException
 	{
@@ -100,8 +147,24 @@ public class EdgeDetectorTest
 	{
 		BufferedImage imageData = ImageIO.read(image);
 		for(Point edge : edges)
+			imageData.setRGB(edge.x, edge.y, ColorConverter.BLUEMASK);
+		File blueImage = new File("/tmp/" + image.getName() + "_blue.png");
+		ImageIO.write(imageData, "png", blueImage);
+	}
+
+	private void colorEdgesWithOverlay(File image, Set<Point> edges1, Set<Point> edges2) throws IOException
+	{
+		BufferedImage imageData = ImageIO.read(image);
+		for(Point edge : edges1)
 			imageData.setRGB(edge.x, edge.y, ColorConverter.REDMASK);
-		File blueImage = new File("/tmp/" + image.getName() + "blue.png");
+		for(Point edge : edges2)
+		{
+			if(edges1.contains(edge))
+				imageData.setRGB(edge.x, edge.y, ColorConverter.GREENMASK);
+			else
+				imageData.setRGB(edge.x, edge.y, ColorConverter.BLUEMASK);
+		}
+		File blueImage = new File("/tmp/" + image.getName() + "_combined.png");
 		ImageIO.write(imageData, "png", blueImage);
 	}
 
