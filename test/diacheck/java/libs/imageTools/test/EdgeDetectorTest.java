@@ -26,23 +26,6 @@ public class EdgeDetectorTest
 	}
 
 	@Test
-	public void justCrunchAllImagesForComparison() throws IOException
-	{
-		findEdgesWithDifferentAlgorithmForFile(new File("test/images/edgeTest.png"));
-		findEdgesWithDifferentAlgorithmForFile(new File("test/images/edgeTest.png"));
-		findEdgesWithDifferentAlgorithmForFile(new File("test/images/GOOD_horizontal_and_cropped.png"));
-	}
-
-	private void findEdgesWithDifferentAlgorithmForFile(final File file) throws IOException
-	{
-		BufferedImage image = ImageIO.read(file);
-		EdgeDetector edgeFinder = new EdgeDetector(image);
-		Set<Point> edges1 = edgeFinder.findEdges();
-		Set<Point> edges2 = edgeFinder.findSobelEdges();
-		colorEdgesWithOverlay(file, edges1, edges2);
-	}
-
-	@Test
 	public void testFindEdgesOnRealPhoto1() throws IOException
 	{
 		final File file = new File("test/images/edgeTest.png");
@@ -62,31 +45,12 @@ public class EdgeDetectorTest
 	}
 
 	@Test
-	public void testFindEdgesOnRealPhoto1WithSobelOperator() throws IOException
-	{
-		final File file = new File("test/images/edgeTest.png");
-		BufferedImage image = ImageIO.read(file);
-		EdgeDetector edgeFinder = new EdgeDetector(image);
-		final Set<Point> edges = edgeFinder.findSobelEdges();
-		makeEdgesBlue(file, edges);
-
-		assertTrue(edges.contains(new Point(212, 107)));
-		assertTrue(edges.contains(new Point(211, 95)));
-		assertTrue(edges.contains(new Point(160, 99)));
-		assertTrue(edges.contains(new Point(777, 140)));
-
-		assertFalse(edges.contains(new Point(645, 125)));
-		assertFalse(edges.contains(new Point(617, 126)));
-		assertFalse(edges.contains(new Point(284, 116)));
-	}
-
-	@Test
 	public void testFindEdgesOnBlackAndWhiteWithSobelOperator() throws IOException
 	{
 		final File file = new File("test/images/ImageValidator/black_and_white.png");
 		BufferedImage image = ImageIO.read(file);
 		EdgeDetector edgeFinder = new EdgeDetector(image);
-		final Set<Point> edges = edgeFinder.findSobelEdges();
+		final Set<Point> edges = edgeFinder.findEdges();
 
 		assertTrue(edges.contains(new Point(200, 289)));
 		assertFalse(edges.contains(new Point(100, 289)));
@@ -151,27 +115,4 @@ public class EdgeDetectorTest
 		File blueImage = new File("/tmp/" + image.getName() + "_blue.png");
 		ImageIO.write(imageData, "png", blueImage);
 	}
-
-	private void colorEdgesWithOverlay(File image, Set<Point> edges1, Set<Point> edges2) throws IOException
-	{
-		BufferedImage imageData = ImageIO.read(image);
-		for(Point edge : edges1)
-			imageData.setRGB(edge.x, edge.y, ColorConverter.REDMASK);
-		for(Point edge : edges2)
-		{
-			if(edges1.contains(edge))
-				imageData.setRGB(edge.x, edge.y, ColorConverter.GREENMASK);
-			else
-				imageData.setRGB(edge.x, edge.y, ColorConverter.BLUEMASK);
-		}
-		File blueImage = new File("/tmp/" + image.getName() + "_combined.png");
-		ImageIO.write(imageData, "png", blueImage);
-	}
-
-	@Test
-	public void testIsEdge()
-	{
-		fail("Not yet implemented");
-	}
-
 }

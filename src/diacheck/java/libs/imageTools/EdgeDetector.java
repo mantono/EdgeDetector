@@ -97,7 +97,7 @@ public class EdgeDetector
 	 * @throws IOException
 	 */
 
-	public Set<Point> findSobelEdges()
+	public Set<Point> findEdges()
 	{
 		Set<Point> edges = new HashSet<Point>();
 		final int width = imageData.getWidth();
@@ -162,35 +162,6 @@ public class EdgeDetector
 		final double orientation = angle % divider;
 		final double orientationDiff = Math.abs(orientation - divider);
 		return orientation < 0.8 || orientationDiff < 0.8;
-	}
-
-	public Set<Point> findEdges() throws IOException
-	{
-		Set<Point> edges = new HashSet<Point>();
-		final int width = imageData.getWidth() - 2;
-		final int height = imageData.getHeight() - 2;
-
-		final int resolution = width * height;
-		final byte distance = (byte) (Math.log10(resolution));
-
-		for(int y = distance; y < height; y += 2)
-		{
-			for(int x = distance; x < width; x += 2)
-			{
-				// TODO x and y may be out of bounds after increment?
-				int currentPixel = imageData.getRGB(x, y);
-				int previousPixel = imageData.getRGB(x - distance, y);
-				if(isEdge(currentPixel, previousPixel))
-					edges.add(new Point(x - distance / 2, y));
-				previousPixel = imageData.getRGB(x, y - distance);
-				if(isEdge(currentPixel, previousPixel))
-					edges.add(new Point(x, y - distance / 2));
-			}
-		}
-		fillGaps(edges);
-		smoothEdges(edges, 3);
-		smoothEdges(edges, 2);
-		return edges;
 	}
 
 	private void smoothEdges(Set<Point> edges, final int limit)
