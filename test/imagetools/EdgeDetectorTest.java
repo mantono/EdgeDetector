@@ -1,4 +1,4 @@
-package diacheck.java.libs.imageTools.test;
+package imagetools;
 
 import static org.junit.Assert.*;
 
@@ -13,9 +13,7 @@ import javax.imageio.ImageIO;
 import org.junit.Before;
 import org.junit.Test;
 
-import diacheck.java.libs.imageTools.ColorConverter;
-import diacheck.java.libs.imageTools.EdgeDetector;
-import diacheck.java.libs.imageTools.ImageReader;
+import imagetools.*;
 
 public class EdgeDetectorTest
 {
@@ -43,7 +41,7 @@ public class EdgeDetectorTest
 		assertFalse(edges.contains(new Point(617, 126)));
 		assertFalse(edges.contains(new Point(284, 116)));
 	}
-
+	
 	@Test
 	public void testFindEdgesOnBlackAndWhiteWithSobelOperator() throws IOException
 	{
@@ -66,9 +64,49 @@ public class EdgeDetectorTest
 
 		assertTrue(edges.contains(new Point(1851, 607)));
 
-		assertFalse(edges.contains(new Point(284, 116)));
 		assertFalse(edges.contains(new Point(1858, 638)));
 		assertFalse(edges.contains(new Point(1976, 648)));
+	}
+	
+	@Test
+	public void testFindEdgesOnRealPhoto3() throws IOException
+	{
+		final File file = new File("test/images/edgeTest2.png");
+		BufferedImage image = ImageIO.read(file);
+		EdgeDetector edgeFinder = new EdgeDetector(image);
+		final Set<Point> edges = edgeFinder.findEdges();
+		
+		assertTrue(edges.contains(new Point(34, 125)));
+		assertTrue(edges.contains(new Point(170, 92)));
+		assertTrue(edges.contains(new Point(220, 87)));
+		assertTrue(edges.contains(new Point(355, 120)));
+		assertTrue(edges.contains(new Point(416, 120)));
+		assertTrue(edges.contains(new Point(550, 100)));
+		assertTrue(edges.contains(new Point(602, 100)));
+		assertTrue(edges.contains(new Point(737, 100)));
+		assertTrue(edges.contains(new Point(795, 100)));
+		assertTrue(edges.contains(new Point(982, 100)));
+		assertTrue(edges.contains(new Point(1116, 100)));
+		assertTrue(edges.contains(new Point(1175, 100)));
+		assertTrue(edges.contains(new Point(1314, 145)));
+		assertTrue(edges.contains(new Point(1370, 145)));
+		assertTrue(edges.contains(new Point(1507, 145)));
+		assertTrue(edges.contains(new Point(1562, 145)));
+		assertTrue(edges.contains(new Point(1707, 145)));
+		assertTrue(edges.contains(new Point(1761, 145)));
+		assertTrue(edges.contains(new Point(1761, 145)));
+		assertTrue(edges.contains(new Point(1901, 145)));
+		
+		assertFalse(edges.contains(new Point(101, 121)));
+		assertFalse(edges.contains(new Point(287, 124)));
+		assertFalse(edges.contains(new Point(482, 124)));
+		assertFalse(edges.contains(new Point(663, 124)));
+		assertFalse(edges.contains(new Point(855, 124)));
+		assertFalse(edges.contains(new Point(1051, 124)));
+		assertFalse(edges.contains(new Point(1242, 124)));
+		assertFalse(edges.contains(new Point(1439, 124)));
+		assertFalse(edges.contains(new Point(1633, 126)));
+		assertFalse(edges.contains(new Point(1827, 128)));
 	}
 
 	@Test

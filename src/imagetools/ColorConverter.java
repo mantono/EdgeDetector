@@ -1,4 +1,4 @@
-package diacheck.java.libs.imageTools;
+package imagetools;
 
 import java.awt.Color;
 
