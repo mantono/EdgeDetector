@@ -45,7 +45,7 @@ public class EdgeDetectorTest
 	@Test
 	public void testFindEdgesOnBlackAndWhiteWithSobelOperator() throws IOException
 	{
-		final File file = new File("test/images/ImageValidator/black_and_white.png");
+		final File file = new File("test/images/black_and_white.png");
 		BufferedImage image = ImageIO.read(file);
 		EdgeDetector edgeFinder = new EdgeDetector(image);
 		final Set<Point> edges = edgeFinder.findEdges();
@@ -57,7 +57,7 @@ public class EdgeDetectorTest
 	@Test
 	public void testFindEdgesOnRealPhoto2() throws IOException
 	{
-		final File file = new File("test/images/GOOD_horizontal_and_cropped.png");
+		final File file = new File("test/images/horizontal_and_cropped.png");
 		BufferedImage image = ImageIO.read(file);
 		EdgeDetector edgeFinder = new EdgeDetector(image);
 		final Set<Point> edges = edgeFinder.findEdges();
@@ -112,7 +112,7 @@ public class EdgeDetectorTest
 	@Test
 	public void testCalculateContrastOnFullContrast1() throws IOException
 	{
-		final File file = new File("test/images/ImageValidator/black_and_white_max_noise.png");
+		final File file = new File("test/images/black_and_white_max_noise.png");
 		BufferedImage image = ImageIO.read(file);
 		EdgeDetector edgeFinder = new EdgeDetector(image);
 		assertEquals(1f, edgeFinder.calculateContrast(), 0.0001);
@@ -121,7 +121,7 @@ public class EdgeDetectorTest
 	@Test
 	public void testCalculateContrastOnFullContrast2() throws IOException
 	{
-		final File file = new File("test/images/ImageValidator/black_and_white.png");
+		final File file = new File("test/images/black_and_white.png");
 		BufferedImage image = ImageIO.read(file);
 		EdgeDetector edgeFinder = new EdgeDetector(image);
 		assertEquals(1f, edgeFinder.calculateContrast(), 0.0001);
@@ -130,7 +130,7 @@ public class EdgeDetectorTest
 	@Test
 	public void testCalculateContrastOnNoContrastBlack() throws IOException
 	{
-		final File file = new File("test/images/ImageValidator/black_zero_noise.png");
+		final File file = new File("test/images/black_zero_noise.png");
 		BufferedImage image = ImageIO.read(file);
 		EdgeDetector edgeFinder = new EdgeDetector(image);
 		assertEquals(0f, edgeFinder.calculateContrast(), 0.0001);
@@ -139,7 +139,7 @@ public class EdgeDetectorTest
 	@Test
 	public void testCalculateContrastOnNoContrastBlue() throws IOException
 	{
-		final File file = new File("test/images/ImageValidator/blue_zero_noise.png");
+		final File file = new File("test/images/blue_zero_noise.png");
 		BufferedImage image = ImageIO.read(file);
 		EdgeDetector edgeFinder = new EdgeDetector(image);
 		assertEquals(0f, edgeFinder.calculateContrast(), 0.0001);
